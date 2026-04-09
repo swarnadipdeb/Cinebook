@@ -38,6 +38,8 @@ public class UserInfo {
 
     private String username;
 
+    private Boolean isVerified;
+
     private String password;
 
     @ManyToMany(fetch = FetchType.EAGER)

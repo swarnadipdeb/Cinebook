@@ -1,8 +1,10 @@
 package authservice.cinebook.controller;
 
 import authservice.cinebook.auth.JwtAuthFilter;
+import authservice.cinebook.entities.OtpToken;
 import authservice.cinebook.eventProducer.UserInfoProducer;
 import authservice.cinebook.repository.UserRepository;
+import authservice.cinebook.service.OtpService;
 import authservice.cinebook.service.UserDetailsServiceImpl;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
@@ -41,8 +43,8 @@ public class SecurityConfig {
 
 
     @Bean
-    public UserDetailsService userDetailsService(UserRepository userRepository, PasswordEncoder passwordEncoder) {
-        return new UserDetailsServiceImpl(userRepository, passwordEncoder, userInfoProducer);
+    public UserDetailsService userDetailsService(UserRepository userRepository, PasswordEncoder passwordEncoder, OtpService otpService) {
+        return new UserDetailsServiceImpl(userRepository, passwordEncoder, userInfoProducer, otpService);
     }
 
     @Bean
@@ -51,7 +53,7 @@ public class SecurityConfig {
         return http
                 .csrf(AbstractHttpConfigurer::disable).cors(CorsConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/auth/v1/login", "/auth/v1/refreshToken", "/auth/v1/signup", "/health", "/error").permitAll()
+                        .requestMatchers("/auth/v1/login", "/auth/v1/refreshToken", "/auth/v1/signup", "/auth/v1/signup-otp-verify","/health", "/error").permitAll()
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
