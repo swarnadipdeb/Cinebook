@@ -3,6 +3,7 @@ package authservice.cinebook.service;
 import authservice.cinebook.entities.UserInfo;
 import authservice.cinebook.eventProducer.UserInfoEvent;
 import authservice.cinebook.eventProducer.UserInfoProducer;
+import authservice.cinebook.model.UserDetailsDto;
 import authservice.cinebook.model.UserInfoDto;
 import authservice.cinebook.repository.UserRepository;
 import lombok.AllArgsConstructor;
@@ -44,7 +45,7 @@ public class UserDetailsServiceImpl implements UserDetailsService
     {
 
         log.debug("Entering in loadUserByUsername Method...");
-        UserInfo user = userRepository.findByUsername(username);
+        UserInfo user = userRepository.findByUserName(username);
         if(user == null){
             log.error("Username not found: " + username);
             throw new UsernameNotFoundException("could not found user..!!");
@@ -53,57 +54,63 @@ public class UserDetailsServiceImpl implements UserDetailsService
         return new CustomUserDetails(user);
     }
 
-    public UserInfo checkIfUserAlreadyVerified(UserInfoDto userInfoDto){
-        UserInfo user = userRepository.findByUsername(userInfoDto.getUsername());
-        if(user != null && user.getIsVerified()) return user;
-        return null;
+    public UserInfo checkIfUserAlreadyExist(UserInfoDto userInfoDto){
+        UserInfo user1 =  userRepository.findByEmail(userInfoDto.getEmail());
+        UserInfo user2 =  userRepository.findByUserName(userInfoDto.getUserName());
+        if(Objects.nonNull(user1) || Objects.nonNull(user2)){
+            return user1;
+        }
+            return null;
     }
 
     public String signupUser(UserInfoDto userInfoDto){
         //        ValidationUtil.validateUserAttributes(userInfoDto);
         userInfoDto.setPassword(passwordEncoder.encode(userInfoDto.getPassword()));
-        if(Objects.nonNull(checkIfUserAlreadyVerified(userInfoDto))){
+        UserInfo user  = checkIfUserAlreadyExist(userInfoDto);
+        if(user != null && user.getIsVerified()){
             return null;
         }
+        if(user != null){
+            return user.getUserId();
+        }
+
         String userId = UUID.randomUUID().toString();
         UserInfo userInfo = UserInfo.builder()
                         .userId(userId)
-                        .username(userInfoDto.getUsername())
+                        .email(userInfoDto.getEmail())
+                        .userName(userInfoDto.getUserName())
                         .isVerified(false)
                         .password(userInfoDto.getPassword())
-                        .roles(new HashSet<>())
+                        .roles(userInfoDto.getRoles())
                         .build();
 
         userRepository.save(userInfo);
-        // pushing EventToQueue
-        userInfoProducer.sendEventToKafka(userInfoEventToPublish(userInfoDto, userId));
         return userId;
     }
 
-    public Boolean validateSignUpUser(String email, String otp, String userId){
-             if(otpService.verifyOtp(email, otp)){
-                UserInfo user =  userRepository.findByUserId(userId);
+    public Boolean validateSignUpUser(String otp, String userId, UserDetailsDto userDetailsDto){
+        UserInfo user =  userRepository.findByUserId(userId);
+             if(otpService.verifyOtp(user.getEmail(), otp)){
                 user.setIsVerified(true);
                 userRepository.save(user);
+                UserInfoEvent userEvert = UserInfoEvent.builder().
+                                userId(userId)
+                               .firstName(userDetailsDto.getFirstName())
+                               .lastName(userDetailsDto.getLastName())
+                               .email(user.getEmail())
+                               .phoneNumber(userDetailsDto.getPhoneNumber()).build();
+                 // pushing EventToQueue
+                 userInfoProducer.sendEventToKafka(userEvert);
                 return true;
              }
+
              return false;
     }
     public String getUserByUsername(String userName){
-        return Optional.of(userRepository.findByUsername(userName)).map(UserInfo::getUserId).orElse(null);
+        return Optional.of(userRepository.findByUserName(userName)).map(UserInfo::getUserId).orElse(null);
     }
 
     public UserInfo getUserInfoByUsername(String userName){
-        return userRepository.findByUsername(userName);
-    }
-
-    private UserInfoEvent userInfoEventToPublish(UserInfoDto userInfoDto, String userId){
-        return UserInfoEvent.builder()
-                .userId(userId)
-                .firstName(userInfoDto.getFirstName())
-                .lastName(userInfoDto.getLastName())
-                .email(userInfoDto.getEmail())
-                .phoneNumber(userInfoDto.getPhoneNumber()).build();
-
+        return userRepository.findByUserName(userName);
     }
 }

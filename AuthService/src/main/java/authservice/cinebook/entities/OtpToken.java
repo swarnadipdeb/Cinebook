@@ -25,6 +25,4 @@ public class OtpToken {
     private LocalDateTime createdAt;
     private LocalDateTime expiresAt;
     private boolean verified;
-
-    // getters & setters
 }

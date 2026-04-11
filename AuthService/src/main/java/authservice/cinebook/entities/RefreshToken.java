@@ -18,9 +18,6 @@ import java.time.Instant;
 public class RefreshToken {
 
 
-//    @GeneratedValue(strategy = GenerationType.IDENTITY)
-//    private int id;
-
     @Id
     @Column(name = "token")
     private String token;

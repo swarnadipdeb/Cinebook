@@ -1,6 +1,7 @@
 package authservice.cinebook.controller;
 
 import authservice.cinebook.entities.RefreshToken;
+import authservice.cinebook.model.UserDetailsDto;
 import authservice.cinebook.model.UserInfoDto;
 import authservice.cinebook.response.JwtResponseDTO;
 import authservice.cinebook.service.JwtService;
@@ -49,8 +50,8 @@ public class AuthController {
     }
 
     @PostMapping("/auth/v1/signup-otp-verify")
-    public ResponseEntity SignUpVerify(@RequestHeader String email, @RequestHeader String UserId, @RequestParam String otp){
-            if(userDetailsService.validateSignUpUser(email,otp,UserId)) {
+    public ResponseEntity SignUpVerify(@RequestHeader String UserId, @RequestParam String otp, @RequestBody UserDetailsDto userDetailsDto){
+            if(userDetailsService.validateSignUpUser(otp,UserId, userDetailsDto)) {
                 RefreshToken refreshToken = refreshTokenService.createRefreshToken(UserId);
                 String jwtToken = jwtService.GenerateToken(UserId);
                 return new ResponseEntity<>(JwtResponseDTO.builder().accessToken(jwtToken).
