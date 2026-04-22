@@ -20,8 +20,8 @@ public class RefreshTokenService {
     @Autowired
     UserRepository userRepository;
 
-    public RefreshToken createRefreshToken(String username){
-        UserInfo userInfoExtracted = userRepository.findByUserName(username);
+    public RefreshToken createRefreshToken(String userName){
+        UserInfo userInfoExtracted = userRepository.findByUserId(userName);
         RefreshToken refreshToken = RefreshToken.builder()
                     .userInfo(userInfoExtracted)
                     .token(UUID.randomUUID().toString())

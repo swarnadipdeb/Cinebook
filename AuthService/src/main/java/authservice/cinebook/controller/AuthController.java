@@ -4,6 +4,7 @@ import authservice.cinebook.entities.RefreshToken;
 import authservice.cinebook.model.UserDetailsDto;
 import authservice.cinebook.model.UserInfoDto;
 import authservice.cinebook.response.JwtResponseDTO;
+import authservice.cinebook.response.SignUpResponseDTO;
 import authservice.cinebook.service.JwtService;
 import authservice.cinebook.service.OtpService;
 import authservice.cinebook.service.RefreshTokenService;
@@ -16,7 +17,6 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.HashMap;
 import java.util.Objects;
 
 @AllArgsConstructor
@@ -38,24 +38,24 @@ public class AuthController {
     @PostMapping("/auth/v1/signup")
     public ResponseEntity SignUp(@RequestBody UserInfoDto userInfoDto){
         try{
-            String userId = userDetailsService.signupUser(userInfoDto);
-            if(Objects.isNull(userId)){
+            String userName = userDetailsService.signupUser(userInfoDto);
+            if(Objects.isNull(userName)){
                 return new ResponseEntity<>("Already Exist", HttpStatus.BAD_REQUEST);
             }
             otpService.sendOtp(userInfoDto.getEmail());
-            return  new ResponseEntity<>(userId,HttpStatus.OK);
+            return  new ResponseEntity<>(SignUpResponseDTO.builder().userName(userName).build(),HttpStatus.OK);
         }catch (Exception ex){
             return new ResponseEntity<>("Exception in User Service" +" "+ex.getMessage()+" "+ex.getCause(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
     @PostMapping("/auth/v1/signup-otp-verify")
-    public ResponseEntity SignUpVerify(@RequestHeader String UserId, @RequestParam String otp, @RequestBody UserDetailsDto userDetailsDto){
-            if(userDetailsService.validateSignUpUser(otp,UserId, userDetailsDto)) {
-                RefreshToken refreshToken = refreshTokenService.createRefreshToken(UserId);
-                String jwtToken = jwtService.GenerateToken(UserId);
+    public ResponseEntity SignUpVerify(@RequestHeader String userName, @RequestParam String otp, @RequestBody UserDetailsDto userDetailsDto){
+            if(userDetailsService.validateSignUpUser(otp,userName, userDetailsDto)) {
+                RefreshToken refreshToken = refreshTokenService.createRefreshToken(userName);
+                String jwtToken = jwtService.GenerateToken(userName);
                 return new ResponseEntity<>(JwtResponseDTO.builder().accessToken(jwtToken).
-                        token(refreshToken.getToken()).userId(UserId).build(), HttpStatus.OK);
+                        token(refreshToken.getToken()).userName(userName).build(), HttpStatus.OK);
             }
             return new ResponseEntity<>("Not Verified", HttpStatus.UNAUTHORIZED);
     }

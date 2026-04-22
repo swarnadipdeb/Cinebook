@@ -39,7 +39,6 @@ public class UserInfo
     private String lastName;
 
     @JsonProperty("phone_number")
-    @NonNull
     private Long phoneNumber;
 
     @JsonProperty("email")

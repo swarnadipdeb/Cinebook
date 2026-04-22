@@ -12,7 +12,11 @@ import java.util.TimeZone;
 @EnableJpaRepositories(basePackages = {"authservice.cinebook.repository"})
 public class App {
     public static void main(String[] args) {
-        TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
-        SpringApplication.run(App.class, args);
+        try {
+            TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
+            SpringApplication.run(App.class, args);
+        }catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 }

@@ -1,10 +1,13 @@
 package authservice.cinebook.service;
 
+import authservice.cinebook.entities.UserInfo;
+import authservice.cinebook.repository.UserRepository;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
@@ -26,6 +29,9 @@ public class JwtService {
     public Date extractExpiration(String token) {
         return extractClaim(token, Claims::getExpiration);
     }
+
+    @Autowired
+    UserRepository userRepository;
 
 
     public <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {
@@ -53,9 +59,11 @@ public class JwtService {
 
 
 
-    public String GenerateToken(String username){
+    public String GenerateToken(String userName){
+        UserInfo userInfoExtracted = userRepository.findByUserName(userName);
         Map<String, Object> claims = new HashMap<>();
-        return createToken(claims, username);
+        claims.put("roles", userInfoExtracted.getRoles());
+        return createToken(claims, userInfoExtracted.getUserName());
     }
 
 

@@ -71,7 +71,7 @@ public class UserDetailsServiceImpl implements UserDetailsService
             return null;
         }
         if(user != null){
-            return user.getUserId();
+            return user.getUserName();
         }
 
         String userId = UUID.randomUUID().toString();
@@ -85,16 +85,16 @@ public class UserDetailsServiceImpl implements UserDetailsService
                         .build();
 
         userRepository.save(userInfo);
-        return userId;
+        return userInfo.getUserName();
     }
 
-    public Boolean validateSignUpUser(String otp, String userId, UserDetailsDto userDetailsDto){
-        UserInfo user =  userRepository.findByUserId(userId);
+    public Boolean validateSignUpUser(String otp, String userName, UserDetailsDto userDetailsDto){
+        UserInfo user =  userRepository.findByUserName(userName);
              if(otpService.verifyOtp(user.getEmail(), otp)){
                 user.setIsVerified(true);
                 userRepository.save(user);
                 UserInfoEvent userEvert = UserInfoEvent.builder().
-                                userId(userId)
+                                userId(user.getUserId())
                                .firstName(userDetailsDto.getFirstName())
                                .lastName(userDetailsDto.getLastName())
                                .email(user.getEmail())
