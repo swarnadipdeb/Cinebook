@@ -55,4 +55,12 @@ public class UserService
         );
     }
 
+    public void deleteUser(String userId) throws Exception {
+        Optional<UserInfo> userInfoOpt = userRepository.findByUserId(userId);
+        if (userInfoOpt.isEmpty()) {
+            throw new Exception("User not found");
+        }
+        userRepository.delete(userInfoOpt.get());
+    }
+
 }

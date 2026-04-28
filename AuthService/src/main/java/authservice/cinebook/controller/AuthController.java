@@ -1,9 +1,11 @@
 package authservice.cinebook.controller;
 
 import authservice.cinebook.entities.RefreshToken;
+import authservice.cinebook.entities.UserInfo;
 import authservice.cinebook.model.UserDetailsDto;
 import authservice.cinebook.model.UserInfoDto;
 import authservice.cinebook.response.JwtResponseDTO;
+import authservice.cinebook.response.PingResponseDTO;
 import authservice.cinebook.response.SignUpResponseDTO;
 import authservice.cinebook.service.JwtService;
 import authservice.cinebook.service.OtpService;
@@ -63,12 +65,14 @@ public class AuthController {
 
 
 @GetMapping("/auth/v1/ping")
-public ResponseEntity<String> ping() {
+public ResponseEntity ping() {
     Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
     if (authentication != null && authentication.isAuthenticated()) {
-        String userId = userDetailsService.getUserByUsername(authentication.getName());
-        if(Objects.nonNull(userId)){
-            return ResponseEntity.ok(userId);
+        UserInfo user = userDetailsService.getUserInfoByUsername(authentication.getName());
+        if(Objects.nonNull(user)){
+            return ResponseEntity.ok(PingResponseDTO.builder().userId(user.getUserId()).roles(
+                    user.getRoles()
+            ).build());
         }
     }
     return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Unauthorized");
