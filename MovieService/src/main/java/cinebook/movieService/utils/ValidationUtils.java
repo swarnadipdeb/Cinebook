@@ -1,6 +1,7 @@
 package cinebook.movieService.utils;
 
 import cinebook.movieService.exceptions.ValidationException;
+import cinebook.movieService.models.ShowtimeSlot;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -24,15 +25,26 @@ public class ValidationUtils {
         }
     }
 
-    public static void validateTimes(List<String> times) {
-        if (times == null || times.isEmpty()) {
-            throw new ValidationException("At least one time is required");
+    public static void validateSlots(List<ShowtimeSlot> slots) {
+        if (slots == null || slots.isEmpty()) {
+            throw new ValidationException("At least one slot is required");
         }
-        for (String time : times) {
+        for (ShowtimeSlot slot : slots) {
+            if (slot.getDate() == null || slot.getDate().isBlank()) {
+                throw new ValidationException("Date is required for each slot");
+            }
+            if (slot.getTime() == null || slot.getTime().isBlank()) {
+                throw new ValidationException("Time is required for each slot");
+            }
             try {
-                LocalTime.parse(time, TIME_FORMATTER);
+                LocalDate.parse(slot.getDate(), DATE_FORMATTER);
             } catch (DateTimeParseException e) {
-                throw new ValidationException("Invalid time format: " + time + ". Expected HH:mm");
+                throw new ValidationException("Invalid date format: " + slot.getDate() + ". Expected YYYY-MM-DD");
+            }
+            try {
+                LocalTime.parse(slot.getTime(), TIME_FORMATTER);
+            } catch (DateTimeParseException e) {
+                throw new ValidationException("Invalid time format: " + slot.getTime() + ". Expected HH:mm");
             }
         }
     }

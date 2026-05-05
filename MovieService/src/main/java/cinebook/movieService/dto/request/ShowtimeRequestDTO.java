@@ -22,15 +22,9 @@ public class ShowtimeRequestDTO {
     @NotBlank(message = "Theater ID is required")
     private String theaterId;
 
-    @NotBlank(message = "Date is required")
-    private String date;
-
-    @NotNull(message = "Times are required")
-    @Size(min = 1, message = "At least one time is required")
-    private List<String> times;
-
-    @NotBlank(message = "Screen is required")
-    private String screen;
+    @NotNull(message = "Slots are required")
+    @Size(min = 1, message = "At least one slot is required")
+    private List<ShowtimeSlotRequestDTO> slots;
 
     @NotBlank(message = "Format is required")
     private String format;

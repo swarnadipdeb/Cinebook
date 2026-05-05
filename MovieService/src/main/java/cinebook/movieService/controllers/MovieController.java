@@ -1,7 +1,9 @@
 package cinebook.movieService.controllers;
 
 import cinebook.movieService.dto.request.MovieRequestDTO;
+import cinebook.movieService.dto.request.MovieUpdateRequestDTO;
 import cinebook.movieService.dto.response.MovieResponseDTO;
+import cinebook.movieService.dto.response.MovieUpdateResponseDTO;
 import cinebook.movieService.dto.response.PaginatedResponse;
 import cinebook.movieService.services.MovieService;
 import jakarta.annotation.Nullable;
@@ -14,7 +16,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/movies")
+@RequestMapping("/catalog/v1/movies")
 public class MovieController {
 
     private final MovieService movieService;
@@ -52,16 +54,9 @@ public class MovieController {
 
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<MovieResponseDTO> updateMovie(
-            @PathVariable String id, @Valid @RequestBody MovieRequestDTO request) {
+    public ResponseEntity<MovieUpdateResponseDTO> updateMovie(
+            @PathVariable String id, @RequestBody MovieUpdateRequestDTO request) {
         return ResponseEntity.ok(movieService.updateMovie(id, request));
-    }
-
-    @PatchMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<MovieResponseDTO> patchMovie(
-            @PathVariable String id, @RequestBody MovieRequestDTO request) {
-        return ResponseEntity.ok(movieService.patchMovie(id, request));
     }
 
     @DeleteMapping("/{id}")

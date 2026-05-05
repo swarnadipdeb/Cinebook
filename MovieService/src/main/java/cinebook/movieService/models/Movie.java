@@ -1,5 +1,6 @@
 package cinebook.movieService.models;
 
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -65,15 +66,13 @@ public class Movie {
     @NotBlank(message = "Description is required")
     private String description;
 
-    @NotNull(message = "Premium price is required")
-    private Double premiumPrice;
-
-    @NotNull(message = "Regular price is required")
-    private Double regularPrice;
-
     @CreatedDate
     private LocalDateTime createdAt;
 
     @LastModifiedDate
     private LocalDateTime updatedAt;
 }
+
+
+
+

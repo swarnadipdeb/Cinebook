@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
+@RequestMapping("/catalog/v1/")
 public class ShowtimeController {
 
     private final ShowtimeService showtimeService;
@@ -20,7 +21,7 @@ public class ShowtimeController {
         this.showtimeService = showtimeService;
     }
 
-    @GetMapping("/api/movies/{movieId}/showtimes")
+    @GetMapping("/movies/{movieId}/showtimes")
     public ResponseEntity<List<ShowtimeResponseDTO>> getShowtimesByMovie(
             @PathVariable String movieId,
             @RequestParam(required = false) String date,
@@ -28,7 +29,7 @@ public class ShowtimeController {
         return ResponseEntity.ok(showtimeService.getShowtimesByMovie(movieId, date, embed));
     }
 
-    @GetMapping("/api/theaters/{theaterId}/showtimes")
+    @GetMapping("/theaters/{theaterId}/showtimes")
     public ResponseEntity<List<ShowtimeResponseDTO>> getShowtimesByTheater(
             @PathVariable String theaterId,
             @RequestParam(required = false) String date,
@@ -36,27 +37,27 @@ public class ShowtimeController {
         return ResponseEntity.ok(showtimeService.getShowtimesByTheater(theaterId, date, embed));
     }
 
-    @GetMapping("/api/showtimes/{id}")
+    @GetMapping("/showtimes/{id}")
     public ResponseEntity<ShowtimeResponseDTO> getShowtimeById(
             @PathVariable String id,
             @RequestParam(defaultValue = "false") boolean embed) {
         return ResponseEntity.ok(showtimeService.getShowtimeById(id, embed));
     }
 
-    @PostMapping("/api/showtimes")
+    @PostMapping("/showtimes")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ShowtimeResponseDTO> createShowtime(@Valid @RequestBody ShowtimeRequestDTO request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(showtimeService.createShowtime(request));
     }
 
-    @PutMapping("/api/showtimes/{id}")
+    @PutMapping("/showtimes/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ShowtimeResponseDTO> updateShowtime(
             @PathVariable String id, @Valid @RequestBody ShowtimeRequestDTO request) {
         return ResponseEntity.ok(showtimeService.updateShowtime(id, request));
     }
 
-    @DeleteMapping("/api/showtimes/{id}")
+    @DeleteMapping("/showtimes/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> deleteShowtime(@PathVariable String id) {
         showtimeService.deleteShowtime(id);

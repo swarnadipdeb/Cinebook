@@ -1,6 +1,5 @@
 package cinebook.movieService.dto.response;
 
-import cinebook.movieService.models.ShowtimeSlot;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -14,13 +13,20 @@ import java.util.List;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class ShowtimeResponseDTO {
+public class MovieUpdateResponseDTO {
     private String id;
-    private String movieId;
-    private String theaterId;
-    private List<ShowtimeSlot> slots;
-    private String format;
-    private TheaterDTO theater;
+    private String title;
+    private String tagline;
+    private String poster;
+    private String backdrop;
+    private Double rating;
+    private Integer duration;
+    private List<String> genre;
+    private String language;
+    private String releaseDate;
+    private String director;
+    private List<String> cast;
+    private String description;
 
     @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime createdAt;

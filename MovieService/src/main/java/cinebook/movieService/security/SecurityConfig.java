@@ -49,11 +49,11 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/health").permitAll()
                 .requestMatchers(HttpMethod.GET,
-                        "/api/movies", "/api/movies/{id}", "/api/movies/search",
-                        "/api/theaters", "/api/theaters/{id}",
-                        "/api/movies/{movieId}/showtimes",
-                        "/api/theaters/{theaterId}/showtimes",
-                        "/api/showtimes/{id}"
+                        "/catalog/v1/movies", "/catalog/v1/movies/{id}", "/catalog/v1/movies/search",
+                        "/catalog/v1/theaters", "/catalog/v1/theaters/{id}",
+                        "/catalog/v1/movies/{movieId}/showtimes",
+                        "/catalog/v1/theaters/{theaterId}/showtimes",
+                        "/catalog/v1/showtimes/{id}"
                 ).permitAll()
                 .anyRequest().authenticated()
             )

@@ -24,10 +24,10 @@ public class MovieRequestDTO {
     @Size(max = 300, message = "Tagline must be at most 300 characters")
     private String tagline;
 
-    @NotBlank(message = "Poster URL is required")
+    @NotBlank(message = "Poster is required (URL or base64)")
     private String poster;
 
-    @NotBlank(message = "Backdrop URL is required")
+    @NotBlank(message = "Backdrop is required (URL or base64)")
     private String backdrop;
 
     @NotNull(message = "Rating is required")
@@ -55,10 +55,4 @@ public class MovieRequestDTO {
 
     @NotBlank(message = "Description is required")
     private String description;
-
-    @NotNull(message = "Premium price is required")
-    private Double premiumPrice;
-
-    @NotNull(message = "Regular price is required")
-    private Double regularPrice;
 }
