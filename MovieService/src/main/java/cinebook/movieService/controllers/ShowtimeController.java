@@ -1,5 +1,6 @@
 package cinebook.movieService.controllers;
 
+import cinebook.movieService.dto.request.ShowtimeCreateRequestDTO;
 import cinebook.movieService.dto.request.ShowtimeRequestDTO;
 import cinebook.movieService.dto.response.ShowtimeResponseDTO;
 import cinebook.movieService.services.ShowtimeService;
@@ -46,7 +47,7 @@ public class ShowtimeController {
 
     @PostMapping("/showtimes")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ShowtimeResponseDTO> createShowtime(@Valid @RequestBody ShowtimeRequestDTO request) {
+    public ResponseEntity<ShowtimeResponseDTO> createShowtime(@Valid @RequestBody ShowtimeCreateRequestDTO request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(showtimeService.createShowtime(request));
     }
 

@@ -21,17 +21,4 @@ public class ShowtimeSlot {
 
     @NotBlank(message = "Date is required")
     private String date;
-
-    private Double premiumPrice;
-
-    private Double regularPrice;
-
-    private Integer rows;
-
-    private Integer cols;
-
-    private List<Integer> premiumCols;
-
-    @Builder.Default
-    private Integer aisleAfterCol = 0;
 }

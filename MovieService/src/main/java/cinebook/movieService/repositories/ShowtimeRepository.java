@@ -25,6 +25,8 @@ public interface ShowtimeRepository extends MongoRepository<Showtime, String> {
     List<Showtime> findByMovieIdAndTheaterIdAndDateAndScreen(
             String movieId, String theaterId, String date, String screenId);
 
+    boolean existsByMovieIdAndTheaterIdAndFormat(String movieId, String theaterId, String format);
+
     List<Showtime> findByMovieIdIn(List<String> movieIds);
 
     List<Showtime> findByTheaterIdIn(List<String> theaterIds);
