@@ -1,0 +1,108 @@
+_format_version: "2.1"
+_transform: true
+
+plugins:
+  - name: cors
+    config:
+      origins:
+        - "*"
+      methods:
+        - GET
+        - POST
+        - PUT
+        - PATCH
+        - DELETE
+        - OPTIONS
+      headers:
+        - Accept
+        - Authorization
+        - Content-Type
+        - UserName
+      credentials: true
+      max_age: 3600
+
+services:
+  - name: kong-status
+    url: http://localhost:8001
+    routes:
+      - name: status-route
+        paths:
+          - /status
+        strip_path: true
+    plugins:
+      - name: request-termination
+        config:
+          status_code: 200
+          message: "OK"
+
+  - name: moive-service
+    url: http://host.docker.internal:9820
+    routes:
+      - name: movies-get-route
+        paths:
+          - /catalog/v1
+        methods:
+          - GET
+          - OPTIONS
+        strip_path: false
+
+      - name: movies-route
+        paths:
+          - /catalog/v1
+        strip_path: false
+        preserve_host: false
+        methods:
+          - POST
+          - PUT
+          - PATCH
+          - DELETE
+          - OPTIONS
+        plugins:
+          - name: custom-auth
+            config:
+              auth_service_url: "http://host.docker.internal:9898/auth/v1/ping"
+  - name: booking-service
+    url: http://host.docker.internal:9830
+    routes:
+      # Public — GET on /bookings/movies/**
+      - name: booking-movies
+        paths:
+          - /bookings/movies
+        methods:
+          - GET
+          - OPTIONS
+        strip_path: false
+
+      # All other booking routes — authenticated via custom-auth
+      - name: booking-auth
+        paths:
+          - /bookings
+          - /health
+        strip_path: false
+        plugins:
+          - name: custom-auth
+            config:
+              auth_service_url: "http://host.docker.internal:9898/auth/v1/ping"
+
+  - name: user-service
+    url: http://host.docker.internal:9810
+    routes:
+      - name: user-route
+        paths:
+          - /user/v1
+        strip_path: false
+        preserve_host: false
+    plugins:
+      - name: custom-auth
+        config:
+          auth_service_url: "http://host.docker.internal:9898/auth/v1/ping"
+  
+
+  - name: auth-service
+    url: http://host.docker.internal:9898
+    routes:
+      - name: auth-route
+        paths:
+          - /auth/v1
+        strip_path: false
+        preserve_host: false

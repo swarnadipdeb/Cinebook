@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 import software.amazon.awssdk.core.ResponseInputStream;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 import software.amazon.awssdk.services.s3.model.GetObjectResponse;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
@@ -24,15 +25,14 @@ public class S3Service {
     @Value("${aws.s3.bucket}")
     private String bucketName;
 
-    private static final String IMAGE_PREFIX = "images/";
+    private static final String PROFILE_PREFIX = "profile-pics/";
 
-    public String uploadImage(String base64Image, String fileName) {
+    public String uploadProfilePic(String base64Image, String fileName) {
         String base64Data = extractBase64Data(base64Image);
         byte[] imageBytes = Base64.getDecoder().decode(base64Data);
 
         String extension = extractExtension(fileName);
-        String uniqueKey = IMAGE_PREFIX + UUID.randomUUID().toString() + "." + extension;
-
+        String uniqueKey = PROFILE_PREFIX + UUID.randomUUID().toString() + "." + extension;
         String contentType = getContentType(extension);
 
         PutObjectRequest putObjectRequest = PutObjectRequest.builder()
@@ -43,27 +43,47 @@ public class S3Service {
                 .build();
 
         s3Client.putObject(putObjectRequest, RequestBody.fromBytes(imageBytes));
+        return buildPublicUrl(uniqueKey);
+    }
 
-        return uniqueKey;
+    public String buildPublicUrl(String key) {
+        return "https://" + bucketName + ".s3.amazonaws.com/" + key;
+    }
+
+    public void deleteObject(String key) {
+        s3Client.deleteObject(DeleteObjectRequest.builder().bucket(bucketName).key(key).build());
+    }
+
+    public void deleteProfilePic(String url) {
+        String key = extractKeyFromUrl(url);
+        if (key != null) {
+            deleteObject(key);
+        }
+    }
+
+    private String extractKeyFromUrl(String url) {
+        int index = url.indexOf(bucketName);
+        if (index == -1) {
+            index = url.indexOf("/profile-pics/");
+            if (index != -1) {
+                return url.substring(index + 1);
+            }
+        }
+        if (index != -1) {
+            return url.substring(index + bucketName.length() + 1);
+        }
+        return url;
     }
 
     public InputStreamResource getImage(String key) throws IOException {
-        GetObjectRequest getObjectRequest = GetObjectRequest.builder()
-                .bucket(bucketName)
-                .key(key)
-                .build();
-
-        ResponseInputStream<GetObjectResponse> response = s3Client.getObject(getObjectRequest);
+        GetObjectRequest request = GetObjectRequest.builder().bucket(bucketName).key(key).build();
+        ResponseInputStream<GetObjectResponse> response = s3Client.getObject(request);
         return new InputStreamResource(response);
     }
 
     public GetObjectResponse getImageMetadata(String key) throws IOException {
-        GetObjectRequest getObjectRequest = GetObjectRequest.builder()
-                .bucket(bucketName)
-                .key(key)
-                .build();
-
-        return s3Client.getObject(getObjectRequest).response();
+        GetObjectRequest request = GetObjectRequest.builder().bucket(bucketName).key(key).build();
+        return s3Client.getObject(request).response();
     }
 
     private String extractBase64Data(String base64Image) {

@@ -14,7 +14,7 @@ public class ScreenLayoutPublisher {
 
     private final KafkaTemplate<String, Object> kafkaTemplate;
 
-    @Value("${app.kafka.topic.screen-layout-create}")
+    @Value("${app.kafka.topic.screen-layout-create-update}")
     private String topic;
 
     @Value("${app.kafka.group-id}")

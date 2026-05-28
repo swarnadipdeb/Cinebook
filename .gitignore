@@ -1,0 +1,36 @@
+# Maven
+**/target/
+**/mvnw
+**/mvnw.cmd
+**/.mvn/wrapper/maven-wrapper.jar
+
+# IDE
+**.idea/
+*.iml
+*.iws
+*.ipr
+.vscode/
+*.classpath
+*.project
+*.factorypath
+*.springBeans
+
+# OS
+.DS_Store
+Thumbs.db
+*.log
+
+# Node / UI
+**/node_modules/
+UI/dist/
+
+# Docker
+*.jar
+*.war
+*.zip
+
+# Environment
+.ENV
+
+.claude
+

@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.*;
 import userservice.cinebook.entities.UserInfoDto;
 import userservice.cinebook.responses.UserInfoResponseDto;
 import userservice.cinebook.security.UserRoleAuthenticationToken;
+import userservice.cinebook.service.S3Service;
 import userservice.cinebook.service.UserService;
 
 @RestController
@@ -20,6 +21,9 @@ public class UserController
 
     @Autowired
     private UserService userService;
+
+    @Autowired
+    private S3Service s3Service;
 
     private String getUserIdFromContext() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
@@ -56,7 +60,7 @@ public class UserController
     }
 
     @PostMapping("/user/v1/createUpdate")
-    @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<UserInfoDto> createUpdateUser(@RequestBody UserInfoDto userInfoDto){
         try{
             String userId = getUserIdFromContext();

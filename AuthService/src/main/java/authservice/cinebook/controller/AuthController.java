@@ -57,7 +57,7 @@ public class AuthController {
                 RefreshToken refreshToken = refreshTokenService.createRefreshToken(userName);
                 String jwtToken = jwtService.GenerateToken(userName);
                 return new ResponseEntity<>(JwtResponseDTO.builder().accessToken(jwtToken).
-                        token(refreshToken.getToken()).userName(userName).build(), HttpStatus.OK);
+                        token(refreshToken.getToken()).username(userName).build(), HttpStatus.OK);
             }
             return new ResponseEntity<>("Not Verified", HttpStatus.UNAUTHORIZED);
     }

@@ -1,15 +1,14 @@
 package cinebook.movieService.services;
 
 import cinebook.movieService.dto.event.ScreenLayoutEvent;
-import cinebook.movieService.dto.request.ShowtimeCreateRequestDTO;
-import cinebook.movieService.dto.request.ShowtimeSlotCreateRequestDTO;
-import cinebook.movieService.dto.request.ShowtimeSlotRequestDTO;
-import cinebook.movieService.dto.request.ShowtimeRequestDTO;
+import cinebook.movieService.dto.request.ShowtimeCreateUpdateRequestDTO;
+import cinebook.movieService.dto.request.ShowtimeSlotCreateUpdateRequestDTO;
 import cinebook.movieService.dto.response.ShowtimeResponseDTO;
 import cinebook.movieService.dto.response.TheaterDTO;
 import cinebook.movieService.exceptions.DuplicateResourceException;
 import cinebook.movieService.exceptions.ReferentialIntegrityException;
 import cinebook.movieService.exceptions.ResourceNotFoundException;
+import cinebook.movieService.kafka.ScreenLayoutDeletePublisher;
 import cinebook.movieService.kafka.ScreenLayoutPublisher;
 import cinebook.movieService.models.Showtime;
 import cinebook.movieService.models.ShowtimeSlot;
@@ -35,6 +34,7 @@ public class ShowtimeService {
     private final MovieRepository movieRepository;
     private final TheaterRepository theaterRepository;
     private final ScreenLayoutPublisher screenLayoutPublisher;
+    private final ScreenLayoutDeletePublisher screenLayoutDeletePublisher;
 
     public List<ShowtimeResponseDTO> getShowtimesByMovie(String movieId, String date, boolean embedTheater) {
         List<Showtime> showtimes = (date != null && !date.isBlank())
@@ -58,7 +58,7 @@ public class ShowtimeService {
         return toResponseDTO(showtime, embedTheater);
     }
 
-    public ShowtimeResponseDTO createShowtime(ShowtimeCreateRequestDTO request) {
+    public ShowtimeResponseDTO createShowtime(ShowtimeCreateUpdateRequestDTO request) {
         ValidationUtils.validateSlots(mapCreateSlotsToEntitySlots(request.getSlots()));
 
         if (!movieRepository.existsById(request.getMovieId())) {
@@ -80,7 +80,7 @@ public class ShowtimeService {
 
         List<ShowtimeSlot> slots = new ArrayList<>();
         List<ScreenLayoutEvent> events = new ArrayList<>();
-        for(ShowtimeSlotCreateRequestDTO slot : request.getSlots()) {
+        for(ShowtimeSlotCreateUpdateRequestDTO slot : request.getSlots()) {
             //generating screenId
             String screenId = UUID.randomUUID().toString();
             //coverting to ShowtimeSLot As per DB Schema
@@ -119,11 +119,11 @@ public class ShowtimeService {
         return toResponseDTO(showtime, false);
     }
 
-    public ShowtimeResponseDTO updateShowtime(String id, ShowtimeRequestDTO request) {
+    public ShowtimeResponseDTO updateShowtime(String id, ShowtimeCreateUpdateRequestDTO request) {
         Showtime existing = showtimeRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Showtime with ID '" + id + "' not found"));
 
-        ValidationUtils.validateSlots(mapToSlots(request.getSlots()));
+        ValidationUtils.validateSlots(mapCreateSlotsToEntitySlots(request.getSlots()));
 
         if (!movieRepository.existsById(request.getMovieId())) {
             throw new ReferentialIntegrityException(
@@ -134,18 +134,51 @@ public class ShowtimeService {
                     "Theater with ID '" + request.getTheaterId() + "' does not exist");
         }
 
+        List<ShowtimeSlot> slots = new ArrayList<>();
+        List<ScreenLayoutEvent> events = new ArrayList<>();
+        for (ShowtimeSlotCreateUpdateRequestDTO slot : request.getSlots()) {
+            String screenId = UUID.randomUUID().toString();
+            slots.add(ShowtimeSlot.builder()
+                    .screenId(screenId)
+                    .date(slot.getDate())
+                    .time(slot.getTime())
+                    .build());
+            ScreenLayoutEvent.Pricing pricing = ScreenLayoutEvent.Pricing.builder()
+                    .premiumPrice(slot.getPremiumPrice())
+                    .regularPrice(slot.getRegularPrice())
+                    .build();
+            events.add(ScreenLayoutEvent.builder()
+                    .movieId(request.getMovieId())
+                    .screenId(screenId)
+                    .theaterId(request.getTheaterId())
+                    .rows(slot.getRows())
+                    .cols(slot.getCols())
+                    .premiumCols(slot.getPremiumCols())
+                    .aisleAfterCol(slot.getAisleAfterCol())
+                    .pricing(pricing)
+                    .bookedSeats(List.of())
+                    .build());
+        }
+
         existing.setMovieId(request.getMovieId());
         existing.setTheaterId(request.getTheaterId());
-        existing.setSlots(mapToSlots(request.getSlots()));
+        existing.setSlots(slots);
         existing.setFormat(request.getFormat());
 
         existing = showtimeRepository.save(existing);
+        publishScreenLayoutEvents(events);
         return toResponseDTO(existing, false);
     }
 
     public void deleteShowtime(String id) {
         Showtime showtime = showtimeRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Showtime with ID '" + id + "' not found"));
+
+        List<String> screenIds = showtime.getSlots().stream()
+                .map(ShowtimeSlot::getScreenId)
+                .toList();
+
+        screenLayoutDeletePublisher.publish(screenIds);
         showtimeRepository.deleteById(showtime.getId());
     }
 
@@ -155,17 +188,7 @@ public class ShowtimeService {
         }
     }
 
-    private List<ShowtimeSlot> mapToSlots(List<ShowtimeSlotRequestDTO> requestSlots) {
-        return requestSlots.stream()
-                .map(r -> ShowtimeSlot.builder()
-                        .screenId(UUID.randomUUID().toString())
-                        .time(r.getTime())
-                        .date(r.getDate())
-                        .build())
-                .toList();
-    }
-
-    public List<ShowtimeSlot> mapCreateSlotsToEntitySlots(List<ShowtimeSlotCreateRequestDTO> createSlots) {
+    public List<ShowtimeSlot> mapCreateSlotsToEntitySlots(List<ShowtimeSlotCreateUpdateRequestDTO> createSlots) {
         return createSlots.stream()
                 .map(s -> ShowtimeSlot.builder()
                         .screenId(UUID.randomUUID().toString())

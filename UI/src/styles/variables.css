@@ -1,0 +1,63 @@
+@theme {
+  /* Brand */
+  --color-primary: oklch(60% 0.25 290);
+  --color-primary-hover: oklch(55% 0.25 290);
+  --color-blue: oklch(65% 0.2 250);
+  --color-blue-hover: oklch(60% 0.2 250);
+  --color-primary-bg: rgba(170, 59, 255, 0.12);
+
+  /* Text */
+  --color-text: #d1d5db;
+  --color-text-muted: #6b7280;
+  --color-text-heading: #f9fafb;
+
+  /* Backgrounds */
+  --color-bg: #0d0d12;
+  --color-bg-card: #16161d;
+  --color-bg-elevated: #1e1e27;
+  --color-bg-hover: #22222c;
+  --color-bg-overlay: rgba(0, 0, 0, 0.7);
+
+  /* Borders */
+  --color-border: #2e303a;
+  --color-border-light: #3d3f4d;
+
+  /* Seat states */
+  --color-seat-available: #22c55e;
+  --color-seat-selected: #aa3bff;
+  --color-seat-booked: #374151;
+  --color-seat-premium: #f59e0b;
+  --color-seat-disabled: #1f2937;
+
+  /* Feedback */
+  --color-success: #22c55e;
+  --color-error: #ef4444;
+  --color-warning: #f59e0b;
+
+  /* Typography */
+  --font-sans: system-ui, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: ui-monospace, Consolas, monospace;
+
+  /* Spacing - using Tailwind's default scale */
+
+  /* Radii */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-full: 9999px;
+
+  /* Shadows */
+  --shadow-card: 0 4px 20px rgba(0, 0, 0, 0.4);
+  --shadow-elevated: 0 8px 32px rgba(0, 0, 0, 0.6);
+  --shadow-glow: 0 0 20px rgba(170, 59, 255, 0.3);
+
+  /* Transitions */
+  --transition-fast: 150ms ease;
+  --transition-base: 250ms ease;
+  --transition-slow: 400ms ease;
+
+  /* Layout */
+  --max-width: 1280px;
+  --navbar-height: 72px;
+}

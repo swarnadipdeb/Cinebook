@@ -5,6 +5,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import userservice.cinebook.entities.UserInfo;
 import userservice.cinebook.entities.UserInfoDto;
+import userservice.cinebook.service.S3Service;
 
 import java.util.Optional;
 import java.util.function.Supplier;
@@ -17,8 +18,21 @@ public class UserService
     @Autowired
     private final userservice.cinebook.repository.UserRepository userRepository;
 
+    @Autowired
+    private S3Service s3Service;
+
     public UserInfoDto createOrUpdateUser(UserInfoDto userInfoDto){
+        String profilePic = userInfoDto.getProfilePic();
+        if (isBase64Image(profilePic)) {
+            profilePic = s3Service.uploadProfilePic(profilePic, null);
+            userInfoDto.setProfilePic(profilePic);
+        }
+
+
         UnaryOperator<UserInfo> updatingUser = user -> {
+            if(userInfoDto.getProfilePic() ==  null) {
+                userInfoDto.setProfilePic(user.getProfilePic());
+            }
             return userRepository.save(userInfoDto.transformToUserInfo());
         };
 
@@ -55,12 +69,20 @@ public class UserService
         );
     }
 
+    private boolean isBase64Image(String value) {
+        return value != null && !value.isEmpty() && value.startsWith("data:");
+    }
+
     public void deleteUser(String userId) throws Exception {
         Optional<UserInfo> userInfoOpt = userRepository.findByUserId(userId);
         if (userInfoOpt.isEmpty()) {
             throw new Exception("User not found");
         }
-        userRepository.delete(userInfoOpt.get());
+        UserInfo userInfo = userInfoOpt.get();
+        if (userInfo.getProfilePic() != null && userInfo.getProfilePic().contains("/")) {
+            s3Service.deleteProfilePic(userInfo.getProfilePic());
+        }
+        userRepository.delete(userInfo);
     }
 
 }

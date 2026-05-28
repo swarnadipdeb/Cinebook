@@ -22,7 +22,6 @@ public class UserInfoDto
 {
 
     @JsonProperty("user_id")
-    @NonNull
     private String userId;
 
     @JsonProperty("first_name")
