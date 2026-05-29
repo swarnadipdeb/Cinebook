@@ -1,5 +1,5 @@
 # --- Build stage ---
-FROM eclipse-temurin:17-jdk AS build
+FROM maven:3-openjdk-17-slim AS build
 COPY . /source
 WORKDIR /source
 RUN mvn clean package -DskipTests
