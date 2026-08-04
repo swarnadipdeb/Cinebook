@@ -11,6 +11,8 @@ export default function LoginPage() {
   const { login } = useAuth()
   const { form, errors, handleChange, setErrors } = useFormValidation<{ username: string; password: string }>({ username: '', password: '' })
   const [submitting, setSubmitting] = useState(false)
+  const [requestError, setRequestError] = useState<string | null>(null)
+
 
   const validate = () => {
     const errs: Record<string, string> = {}
@@ -25,16 +27,25 @@ export default function LoginPage() {
     e.preventDefault()
     const errs = validate()
     if (Object.keys(errs).length) {
+      setRequestError(null)
       setErrors(errs as Partial<Record<keyof typeof form, string>>)
       return
     }
+
+    setRequestError(null)
     setSubmitting(true)
-    const result = await login(form.username, form.password)
-    if (result.success) {
-      navigate(redirect)
-    } else {
+
+    try {
+      const result = await login(form.username, form.password)
+      if (result.success) {
+        navigate(redirect)
+      } else {
+        setRequestError(result.error || 'Invalid username or password')
+      }
+    } catch {
+      setRequestError('An unexpected error occurred. Please try again.')
+    } finally {
       setSubmitting(false)
-      setErrors({ username: 'Invalid username or password' })
     }
   }
 
@@ -86,6 +97,12 @@ export default function LoginPage() {
               <span id="password-error" className="text-[13px] text-[var(--color-error)]">{errors.password}</span>
             )}
           </div>
+
+          {requestError ? (
+            <div className="rounded-lg border border-[var(--color-error)]/20 bg-[var(--color-error)]/10 px-3 py-2 text-sm text-[var(--color-error)]">
+              {requestError}
+            </div>
+          ) : null}
 
           <button
             type="submit"

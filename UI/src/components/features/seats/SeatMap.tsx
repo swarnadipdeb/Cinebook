@@ -8,22 +8,32 @@ interface SeatMapProps {
   onToggle: (seat: Seat) => void
 }
 
+type DisplaySeat = Seat & { idx: number; selected?: boolean }
+
 export default function SeatMap({
   seatGrid,
   selectedSeats,
   onToggle,
 }: SeatMapProps) {
   const seatMapWithSelection = useMemo(
-    () =>
-      seatGrid.map((rowSeats) =>
-        rowSeats.map((seat, idx) => {
-          const augmented = { ...seat, idx }
+    () => {
+      // Ensure seatGrid is an array before calling .map()
+      if (!Array.isArray(seatGrid)) {
+        return []
+      }
+      return seatGrid.map((rowSeats) => {
+        // Ensure each row is also an array
+        if (!Array.isArray(rowSeats)) {
+          return []
+        }
+        return rowSeats.map((seat, idx) => {
           const isSelected = selectedSeats.some(
             (s) => s.row === seat.row && s.col === seat.col && (s.idx ?? 0) === idx
           )
-          return isSelected ? { ...augmented, type: 'selected' as const } : augmented
+          return { ...seat, idx, selected: isSelected }
         })
-      ),
+      })
+    },
     [seatGrid, selectedSeats]
   )
 

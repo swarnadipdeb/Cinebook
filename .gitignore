@@ -31,6 +31,8 @@ UI/dist/
 
 # Environment
 .ENV
+.env
+github-credentials.txt
 
 .claude
 

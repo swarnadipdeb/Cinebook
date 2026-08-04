@@ -203,8 +203,8 @@ export default function MovieDetailPage() {
             <div className="flex flex-col gap-8">
               {slotsByDate
                 .filter(([date]) => date === selectedDate)
-                .map(([, theaters]) => (
-                  <div className="flex flex-col gap-5">
+                .map(([date, theaters]) => (
+                  <div key={date} className="flex flex-col gap-5">
                     {theaters.map((group) => {
                       const theaterId = group.formats[0].showtime.theaterId
                       const activeFormat = selectedFormats[theaterId] || group.formats[0].format

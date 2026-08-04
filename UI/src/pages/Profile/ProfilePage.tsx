@@ -357,43 +357,46 @@ export default function ProfilePage() {
         <div className="mb-8">
           <h3 className="text-lg font-bold text-[var(--color-text-heading)] mb-4 pb-3">Booking History</h3>
 
-          {bookingsPage && bookingsPage.content.length > 0 ? (
+          {(bookingsPage?.content?.length ?? 0) > 0 ? (
             <>
               <div className="space-y-4 mb-6">
-                {bookingsPage.content.map((booking) => (
-                  <div key={booking.id} className="bg-[var(--color-bg-card)] rounded-xl p-4">
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-sm font-semibold text-[var(--color-text-heading)]">
-                        #{booking.bookingId}
-                      </span>
-                      <span className={`text-xs px-2 py-1 rounded-full font-semibold ${
-                        booking.status === 'CONFIRMED' || booking.status === 'ACTIVE'
-                          ? 'bg-[var(--color-seat-available)]/20 text-[var(--color-seat-available)]'
-                          : 'bg-[var(--color-text-muted)]/20 text-[var(--color-text-muted)]'
-                      }`}>
-                        {booking.status}
-                      </span>
+                {bookingsPage.content.map((booking) => {
+                  const seatCount = booking.seats?.length ?? 0
+                  return (
+                    <div key={booking.id} className="bg-[var(--color-bg-card)] rounded-xl p-4">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-sm font-semibold text-[var(--color-text-heading)]">
+                          #{booking.bookingId}
+                        </span>
+                        <span className={`text-xs px-2 py-1 rounded-full font-semibold ${
+                          booking.status === 'CONFIRMED' || booking.status === 'ACTIVE'
+                            ? 'bg-[var(--color-seat-available)]/20 text-[var(--color-seat-available)]'
+                            : 'bg-[var(--color-text-muted)]/20 text-[var(--color-text-muted)]'
+                        }`}>
+                          {booking.status}
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-[var(--color-text-muted)]">
+                          {seatCount} seat{seatCount > 1 ? 's' : ''}
+                        </span>
+                        <span className="font-bold text-[var(--color-primary)]">
+                          ₹{booking.totalPrice.toFixed(2)}
+                        </span>
+                      </div>
+                      <div className="text-xs text-[var(--color-text-muted)] mt-1">
+                        {new Date(booking.createdAt).toLocaleDateString('en-IN', {
+                          day: 'numeric',
+                          month: 'short',
+                          year: 'numeric',
+                        })}
+                      </div>
                     </div>
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-[var(--color-text-muted)]">
-                        {booking.seats.length} seat{booking.seats.length > 1 ? 's' : ''}
-                      </span>
-                      <span className="font-bold text-[var(--color-primary)]">
-                        ₹{booking.totalPrice.toFixed(2)}
-                      </span>
-                    </div>
-                    <div className="text-xs text-[var(--color-text-muted)] mt-1">
-                      {new Date(booking.createdAt).toLocaleDateString('en-IN', {
-                        day: 'numeric',
-                        month: 'short',
-                        year: 'numeric',
-                      })}
-                    </div>
-                  </div>
-                ))}
+                  )
+                })}
               </div>
 
-              {bookingsPage.totalPages > 1 && (
+              {(bookingsPage?.totalPages ?? 0) > 1 && (
                 <div className="flex items-center justify-center gap-2">
                   <button
                     onClick={() => loadPage(page - 1)}

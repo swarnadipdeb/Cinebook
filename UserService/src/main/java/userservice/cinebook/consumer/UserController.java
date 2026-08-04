@@ -60,7 +60,7 @@ public class UserController
     }
 
     @PostMapping("/user/v1/createUpdate")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('USER')")
     public ResponseEntity<UserInfoDto> createUpdateUser(@RequestBody UserInfoDto userInfoDto){
         try{
             String userId = getUserIdFromContext();

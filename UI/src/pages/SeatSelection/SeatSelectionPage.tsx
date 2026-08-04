@@ -20,6 +20,7 @@ export default function SeatSelectionPage() {
 
   const [seatGrid, setSeatGrid] = useState<Seat[][]>([])
   const [loading, setLoading] = useState(true)
+  const [seatLoadError, setSeatLoadError] = useState<string | null>(null)
   const [selectedSeats, setSelectedSeats] = useState<Seat[]>([])
   const [reservationError, setReservationError] = useState<string | null>(null)
 
@@ -37,13 +38,29 @@ export default function SeatSelectionPage() {
   useEffect(() => {
     if (!movie || !slot) return
     setLoading(true)
+    setSeatLoadError(null)
     getSeatsByScreen(movie.id, slot.screenId)
       .then((grid) => {
+        // Validate that grid is an array
+        if (!Array.isArray(grid)) {
+          console.error('Seat grid response is not an array:', grid)
+          setSeatLoadError('Failed to load seat map. Please try again.')
+          setSeatGrid([])
+          return
+        }
+        if (grid.length === 0) {
+          setSeatLoadError('No seats available for this showtime.')
+          setSeatGrid([])
+          return
+        }
         setSeatGrid(grid)
-        setLoading(false)
       })
-      .catch(() => {
+      .catch((error) => {
+        console.error('Failed to fetch seats:', error)
+        setSeatLoadError('Failed to load seat map. Please try again.')
         setSeatGrid([])
+      })
+      .finally(() => {
         setLoading(false)
       })
   }, [movie, slot])
@@ -102,6 +119,22 @@ export default function SeatSelectionPage() {
     return (
       <div className="text-center py-16 text-[var(--color-text-muted)]">
         <p>Loading seat map...</p>
+      </div>
+    )
+  }
+
+  if (seatLoadError) {
+    return (
+      <div className="text-center py-16">
+        <div className="inline-block p-6 bg-[var(--color-bg-card)] rounded-xl border border-[var(--color-error)]/30">
+          <p className="text-[var(--color-error)] font-semibold mb-4">{seatLoadError}</p>
+          <button
+            onClick={() => window.history.back()}
+            className="px-4 py-2 bg-[var(--color-primary)] text-white rounded-lg hover:opacity-90 transition"
+          >
+            Go Back
+          </button>
+        </div>
       </div>
     )
   }

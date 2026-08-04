@@ -13,6 +13,8 @@ import cinebook.bookingservice.utils.BookingIdGenerator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.util.Date;
@@ -91,8 +93,8 @@ public class BookingService {
 
     public PaginatedResponse<BookingResponseDTO> getUserBookings(String userId, int page, int size) {
         Page<Booking> bookingPage = bookingRepository.findAll(
-                org.springframework.data.domain.PageRequest.of(page, size,
-                        org.springframework.data.domain.Sort.by("createdAt").descending()));
+                PageRequest.of(page, size,
+                        Sort.by("createdAt").descending()));
 
         List<BookingResponseDTO> userBookings = bookingPage.getContent().stream()
                 .filter(b -> b.getUserId().equals(userId))

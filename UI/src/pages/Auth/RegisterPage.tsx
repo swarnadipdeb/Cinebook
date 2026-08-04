@@ -11,7 +11,7 @@ export default function RegisterPage() {
     userName: '', email: '', password: '', confirmPassword: '', firstName: '', lastName: '', phone: ''
   })
   const [submitting, setSubmitting] = useState(false)
-  const [serverError, setServerError] = useState('')
+  const [requestError, setRequestError] = useState<string | null>(null)
 
   const validate = () => {
     const errs: Record<string, string> = {}
@@ -26,23 +26,32 @@ export default function RegisterPage() {
       errs.confirmPassword = 'Passwords do not match'
     if (!form.firstName.trim()) errs.firstName = 'First name is required'
     if (!form.lastName.trim()) errs.lastName = 'Last name is required'
+    if (!form.phone.trim()) errs.phone = 'Phone number is required'
     return errs
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setServerError('')
     const errs = validate()
     if (Object.keys(errs).length) {
+      setRequestError(null)
       setErrors(errs as Partial<Record<keyof typeof form, string>>)
       return
     }
+
+    setRequestError(null)
     setSubmitting(true)
-    const result = await register(form.userName, form.email, form.password)
-    if (result.success && result.userName) {
-      navigate(ROUTES.OTP_VERIFY, { state: { userName: result.userName, firstName: form.firstName, lastName: form.lastName, phone: form.phone } })
-    } else {
-      setServerError(result.error || 'Signup failed. Please try again.')
+
+    try {
+      const result = await register(form.userName, form.email, form.password, [{ name: 'ROLE_USER' }])
+      if (result.success && result.userName) {
+        navigate(ROUTES.OTP_VERIFY, { state: { userName: result.userName, firstName: form.firstName, lastName: form.lastName, phone: form.phone } })
+      } else {
+        setRequestError(result.error || 'Signup failed. Please try again.')
+      }
+    } catch {
+      setRequestError('An unexpected error occurred. Please try again.')
+    } finally {
       setSubmitting(false)
     }
   }
@@ -179,7 +188,7 @@ export default function RegisterPage() {
 </div>
 
           <div className="flex flex-col gap-1">
-            <label htmlFor="phone" className="text-sm font-semibold text-[var(--color-text)]">Phone (Optional)</label>
+            <label htmlFor="phone" className="text-sm font-semibold text-[var(--color-text)]">Phone Number</label>
             <input
               id="phone"
               name="phone"
@@ -187,10 +196,22 @@ export default function RegisterPage() {
               autoComplete="tel"
               value={form.phone}
               onChange={handleChange}
-              className="px-4 py-2.5 bg-[var(--color-bg)] rounded-lg text-[var(--color-text-heading)] text-base transition-all duration-150 outline-none placeholder:text-[var(--color-text-muted)] focus:ring-2 focus:ring-[var(--color-primary)]"
+              className={`px-4 py-2.5 bg-[var(--color-bg)] rounded-lg text-[var(--color-text-heading)] text-base transition-all duration-150 outline-none placeholder:text-[var(--color-text-muted)] ${
+                errors.phone ? 'ring-2 ring-[var(--color-error)]' : 'focus:ring-2 focus:ring-[var(--color-primary)]'
+              }`}
               placeholder="+1 234 567 8900"
+              aria-describedby={errors.phone ? 'phone-error' : undefined}
             />
+            {errors.phone && (
+              <span id="phone-error" className="text-[12px] text-[var(--color-error)]">{errors.phone}</span>
+            )}
           </div>
+
+          {requestError ? (
+            <div className="rounded-lg border border-[var(--color-error)]/20 bg-[var(--color-error)]/10 px-3 py-2 text-sm text-[var(--color-error)]">
+              {requestError}
+            </div>
+          ) : null}
 
           <button
             type="submit"
@@ -200,10 +221,6 @@ export default function RegisterPage() {
             {submitting ? 'Creating account...' : 'Create Account'}
           </button>
         </form>
-
-        {serverError && (
-          <p className="text-[var(--color-error)] text-sm text-center mt-3">{serverError}</p>
-        )}
 
         <p className="text-center mt-4 text-[var(--color-text-muted)] text-[14px]">
           Already have an account?{' '}

@@ -55,10 +55,9 @@ public class UserDetailsServiceImpl implements UserDetailsService
     }
 
     public UserInfo checkIfUserAlreadyExist(UserInfoDto userInfoDto){
-        UserInfo user1 =  userRepository.findByEmail(userInfoDto.getEmail());
-        UserInfo user2 =  userRepository.findByUserName(userInfoDto.getUserName());
-        if(Objects.nonNull(user1) || Objects.nonNull(user2)){
-            return user1;
+        UserInfo user =  userRepository.findByUserName(userInfoDto.getUserName());
+        if(Objects.nonNull(user)){
+            return user;
         }
             return null;
     }
@@ -71,6 +70,14 @@ public class UserDetailsServiceImpl implements UserDetailsService
             return null;
         }
         if(user != null){
+             user = UserInfo.builder()
+                    .email(userInfoDto.getEmail())
+                    .userName(userInfoDto.getUserName())
+                    .isVerified(false)
+                    .password(userInfoDto.getPassword())
+                    .roles(userInfoDto.getRoles())
+                    .build();
+            userRepository.save(user);
             return user.getUserName();
         }
 

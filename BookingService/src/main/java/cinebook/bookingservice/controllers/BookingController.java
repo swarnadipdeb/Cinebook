@@ -21,7 +21,7 @@ public class BookingController {
         this.bookingService = bookingService;
     }
 
-    @PostMapping
+    @PostMapping("/confirm")
     public ResponseEntity<BookingResponseDTO> confirmBooking(
             @Valid @RequestBody BookingRequestDTO dto) {
         String userId = getUserIdFromContext();

@@ -55,6 +55,14 @@ export interface Showtime extends ShowtimeEntry {
   theater: Theater
 }
 
+interface Role {
+  name: string;
+}
+
+export interface UserRoles {
+  roles: Role[];
+}
+
 // ---- Real API response types ----
 
 export interface ShowSlot {
@@ -228,7 +236,7 @@ export interface AuthContextValue {
   isLoggedIn: boolean
   isAdmin: boolean
   loading: boolean
-  login: (username: string, password: string) => Promise<{ success: boolean }>
+  login: (username: string, password: string) => Promise<{ success: boolean; error?: string }>
   register: (name: string, email: string, password: string) => Promise<{ success: boolean; userName?: string; error?: string }>
   verifyOtp: (userName: string, otp: string, firstName?: string, lastName?: string, phone?: string) => Promise<{ success: boolean; error?: string }>
   logout: () => void

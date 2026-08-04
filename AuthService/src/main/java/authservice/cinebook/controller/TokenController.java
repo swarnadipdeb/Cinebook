@@ -56,7 +56,7 @@ public class TokenController
                         .build(), HttpStatus.OK);
             }
         }
-        return new ResponseEntity<>("Exception in User Service", HttpStatus.INTERNAL_SERVER_ERROR);
+        return new ResponseEntity<>("Exception in Auth Service", HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
     @PostMapping("/auth/v1/refreshToken")

@@ -1,10 +1,11 @@
+import { UserRoles } from '../types'
 import { decodeJwt } from '../utils/jwtDecode'
 
 export interface SignupRequest {
   user_name: string
   email: string
   password: string
-  roles?: string[]
+  roles?: UserRoles
 }
 
 export interface OtpVerifyRequest {
@@ -52,17 +53,36 @@ export const authService = {
     return decodeJwt(token) as TokenClaims | null
   },
 
-  async signup(data: SignupRequest): Promise<{ user_name: string }> {
-    const response = await fetchWithTimeout(`${API_BASE_URL}/auth/v1/signup`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data),
-    })
-    if (!response.ok) {
-      const error = await response.text()
-      throw new Error(error || 'Signup failed')
+  async signup(data: SignupRequest): Promise<{ userName: string }> {
+    try {
+      const response = await fetchWithTimeout(`${API_BASE_URL}/auth/v1/signup`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      })
+
+      if (!response.ok) {
+        let errorMessage = `Signup failed ${response.status.toString()} (${response.statusText})`
+
+        try {
+          const errorText = await response.text()
+          if (errorText) {
+            errorMessage = errorText
+          }
+        } catch {
+          errorMessage = `Unknown Error ${response.status.toString()} (${response.statusText})`
+        }
+
+        throw new Error(errorMessage)
+      }
+
+      return response.json()
+    } catch (error) {
+      if (error instanceof Error) {
+        throw error
+      }
+      throw new Error('Signup failed')
     }
-    return response.json()
   },
 
   async verifyOtp(userName: string, otp: string, data?: OtpVerifyRequest): Promise<JwtResponse> {
@@ -82,16 +102,35 @@ export const authService = {
   },
 
   async login(credentials: LoginRequest): Promise<JwtResponse> {
-    const response = await fetchWithTimeout(`${API_BASE_URL}/auth/v1/login`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(credentials),
-    })
-    if (!response.ok) {
-      const error = await response.text()
-      throw new Error(error || 'Login failed')
+    try {
+      const response = await fetchWithTimeout(`${API_BASE_URL}/auth/v1/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(credentials),
+      })
+
+      if (!response.ok) {
+        let errorMessage = 'Login failed ' + `${response.status.toString()} (${response.statusText})`
+
+        try {
+          const errorText = await response.text()
+          if (errorText) {
+            errorMessage = `${errorText} ${response.status.toString()} (${response.statusText})`
+          }
+        } catch {
+          errorMessage = `Unkonwn Error ${response.status.toString()} (${response.statusText})`
+        }
+
+        throw new Error(errorMessage)
+      }
+
+      return response.json()
+    } catch (error) {
+      if (error instanceof Error) {
+        throw error
+      }
+      throw new Error('An unknown error occurred during login')
     }
-    return response.json()
   },
 
   async refreshToken(data: RefreshTokenRequest): Promise<JwtResponse> {

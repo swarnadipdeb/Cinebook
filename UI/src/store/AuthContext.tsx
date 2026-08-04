@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useCallback, useEffect, ReactNode } from 'react'
-import type { User, AuthContextValue } from '../types'
+import type { User, AuthContextValue, UserRoles } from '../types'
 import { authService } from '../services/authService'
 import { decodeJwt } from '../utils/jwtDecode'
 
@@ -27,6 +27,21 @@ const clearAuthStorage = (): void => {
   localStorage.removeItem('userName')
   localStorage.removeItem('userId')
   localStorage.removeItem('user')
+}
+
+const getErrorMessage = (err: unknown, fallback = 'Request failed'): string => {
+  if (typeof err === 'string' && err.trim()) return err
+
+  if (err instanceof Error && err.message) return err.message
+
+  if (typeof err === 'object' && err !== null) {
+    const maybeResponse = (err as { response?: { data?: { message?: string; error?: string } } }).response
+    const message = maybeResponse?.data?.message || maybeResponse?.data?.error || (err as { message?: string }).message
+
+    if (typeof message === 'string' && message.trim()) return message
+  }
+
+  return fallback
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null)
@@ -94,7 +109,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     restoreSession()
   }, [])
 
-  const login = useCallback(async (username: string, password: string): Promise<{ success: boolean }> => {
+  const login = useCallback(async (username: string, password: string): Promise<{ success: boolean; error?: string }> => {
     setLoading(true)
     try {
       const response = await authService.login({ username, password })
@@ -104,28 +119,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const subName = extractUserName(response.accessToken)
       const userName = response.username || subName
       const userData = { id: userName, name: userName, email: '', roles }
-      setUser(userData);
+      setUser(userData)
       localStorage.setItem('user', JSON.stringify(userData))
-      setLoading(false)
       return { success: true }
-    } catch(err:any) {
+    } catch (err) {
+      const message = getErrorMessage(err, 'Login failed')
+      console.log(err)
+      return { success: false, error: message }
+    } finally {
       setLoading(false)
-      console.error( err.getMessage())
-      return { success: false }
     }
   }, [])
 
-  const register = useCallback(async (name: string, email: string, password: string): Promise<{ success: boolean; userName?: string; error?: string }> => {
+  const register = useCallback(async (name: string, email: string, password: string, roles: UserRoles): Promise<{ success: boolean; userName?: string; error?: string }> => {
     setLoading(true)
     try {
-      const response = await authService.signup({ user_name: name, email, password })
-      setLoading(false)
-      return { success: true, userName: response.user_name }
+      const response = await authService.signup({ user_name: name, email, password, roles })
+      return { success: true, userName: response.userName }
     } catch (err) {
-      setLoading(false)
-      const message = err instanceof Error ? err.message : 'Signup failed'
+      const message = getErrorMessage(err, 'Signup failed')
       console.error('Signup error:', message)
       return { success: false, error: message }
+    } finally {
+      setLoading(false)
     }
   }, [])
 

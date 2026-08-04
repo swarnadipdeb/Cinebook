@@ -36,7 +36,7 @@ services:
           message: "OK"
 
   - name: moive-service
-    url: http://host.docker.internal:9820
+    url: http://cinebook-movie:9820
     routes:
       - name: movies-get-route
         paths:
@@ -60,9 +60,9 @@ services:
         plugins:
           - name: custom-auth
             config:
-              auth_service_url: "http://host.docker.internal:9898/auth/v1/ping"
+              auth_service_url: "http://cinebook-auth:9898/auth/v1/ping"
   - name: booking-service
-    url: http://host.docker.internal:9830
+    url: http://cinebook-booking:9830
     routes:
       # Public — GET on /bookings/movies/**
       - name: booking-movies
@@ -82,10 +82,10 @@ services:
         plugins:
           - name: custom-auth
             config:
-              auth_service_url: "http://host.docker.internal:9898/auth/v1/ping"
+              auth_service_url: "http://cinebook-auth:9898/auth/v1/ping"
 
   - name: user-service
-    url: http://host.docker.internal:9810
+    url: http://cinebook-user:9810
     routes:
       - name: user-route
         paths:
@@ -95,11 +95,11 @@ services:
     plugins:
       - name: custom-auth
         config:
-          auth_service_url: "http://host.docker.internal:9898/auth/v1/ping"
+          auth_service_url: "http://cinebook-auth:9898/auth/v1/ping"
   
 
   - name: auth-service
-    url: http://host.docker.internal:9898
+    url: http://cinebook-auth:9898
     routes:
       - name: auth-route
         paths:

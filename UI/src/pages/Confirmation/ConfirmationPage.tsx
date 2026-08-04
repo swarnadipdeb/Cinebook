@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useLocation, Link, useNavigate } from 'react-router-dom'
 import { ROUTES } from '../../constants/routes'
 import { formatPrice } from '../../utils/formatPrice'
-import { confirmBooking, cancelReservation } from '../../services/bookingService'
+import { confirmBooking, cancelReservation, createBooking } from '../../services/bookingService'
 import type { Movie, ShowtimeResponseDTO, ShowSlot, Seat, Booking, Reservation, BookingResponseDTO, BookingRequestDTO } from '../../types'
 
 interface LocationState {
@@ -33,6 +33,7 @@ export default function ConfirmationPage() {
   const [confirming, setConfirming] = useState(false)
   const [confirmed, setConfirmed] = useState<BookingResponseDTO | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [log, setLog] = useState<any>(null) // unused state for logging purposes
 
   const handleCancel = async () => {
     if (!reservation) return
@@ -55,8 +56,7 @@ export default function ConfirmationPage() {
         price: s.price,
       }))
 
-      const time = slot.time.match(/^(.+?)(:)/)?.[1] || slot.time
-      const formattedTime = time.includes(':') ? time.slice(0, 5) : slot.time
+      
 
       const request: BookingRequestDTO = {
         reservationId: reservation.id,
@@ -64,15 +64,16 @@ export default function ConfirmationPage() {
         movieId: movie.id,
         theaterId: showtime.theaterId,
         screenId: slot.screenId,
-        time: formattedTime,
+        time: slot.time,
         seats: bookingSeats,
         totalPrice: totalPrice || 0,
       }
 
-      const response = await confirmBooking(request)
+      setLog(`${request.reservationId} - ${request.showtimeId} - Seats: ${request.seats.map((s) => `${s.row}${s.col}`).join(', ')} - Total: ${formatPrice(request.totalPrice)} - ${request.theaterId} - ${request.screenId} - ${request.time.toString()} - ${request.movieId}`) // Log the selected seats
+      const response = await createBooking(request)
       setConfirmed(response)
-    } catch {
-      setError('Failed to confirm booking. Your seat reservation is still active.')
+    } catch(error: any) {
+      setError(`Failed to confirm booking. Your seat reservation is still active. ${error.message}`)
     } finally {
       setConfirming(false)
     }
@@ -203,6 +204,11 @@ export default function ConfirmationPage() {
       {error && (
         <div className="mb-6 p-4 bg-[var(--color-bg)] rounded-lg text-[var(--color-error)] text-sm border border-[var(--color-error)]/30 text-center">
           {error}
+        </div>
+      )}
+      {log && (
+        <div className="mb-6 p-4 bg-[var(--color-bg)] rounded-lg text-[var(--color-text)] text-sm border border-[var(--color-border)]/30 text-center">
+          {log}
         </div>
       )}
       <div className="flex justify-center gap-4">

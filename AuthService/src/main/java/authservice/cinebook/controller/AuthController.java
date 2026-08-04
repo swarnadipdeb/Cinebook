@@ -42,7 +42,7 @@ public class AuthController {
         try{
             String userName = userDetailsService.signupUser(userInfoDto);
             if(Objects.isNull(userName)){
-                return new ResponseEntity<>("Already Exist", HttpStatus.BAD_REQUEST);
+                return new ResponseEntity<>("Username Already Exist", HttpStatus.BAD_REQUEST);
             }
             otpService.sendOtp(userInfoDto.getEmail());
             return  new ResponseEntity<>(SignUpResponseDTO.builder().userName(userName).build(),HttpStatus.OK);
