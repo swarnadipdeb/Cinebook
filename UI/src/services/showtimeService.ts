@@ -6,11 +6,13 @@ import type { ScreenLayout, ShowSlot, ShowtimeResponseDTO } from '../types'
 // GET /catalog/v1/movies/{movieId}/showtimes?embed=true
 export const getShowtimesByMovie = (
   movieId: string,
-  date?: string
+  date?: string,
+  startdate?: string,
+  enddate?: string
 ): Promise<ShowtimeResponseDTO[]> => {
   return api
     .get(`/catalog/v1/movies/${movieId}/showtimes`, {
-      params: { embed: true, date: date || undefined },
+      params: { embed: true, date: date || undefined, startdate: startdate || undefined, enddate: enddate || undefined  },
     })
     .then((r) => r.data)
 }

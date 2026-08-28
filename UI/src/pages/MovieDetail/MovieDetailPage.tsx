@@ -27,12 +27,20 @@ export default function MovieDetailPage() {
   useEffect(() => {
     if (!id) return
     setLoading(true)
-    Promise.all([getMovieById(id), getShowtimesByMovie(id)]).then(
+
+    //selecting showtimes for the next 7 days
+    const today = new Date()
+    const formatDate = (date: Date) => date.toISOString().slice(0, 10)
+    const startdate = formatDate(today)
+    const enddate = formatDate(new Date(today.getTime() + 6 * 24 * 60 * 60 * 1000))
+
+    Promise.all([getMovieById(id), getShowtimesByMovie(id, undefined, startdate, enddate)]).then(
       ([movieData, showtimeData]) => {
         setMovie(movieData)
         setShowtimeData(showtimeData)
         setLoading(false)
       }
+      
     ).catch(() => setLoading(false))
   }, [id])
 
@@ -257,7 +265,7 @@ export default function MovieDetailPage() {
                                       : 'bg-[var(--color-bg-elevated)] text-[var(--color-text)] hover:bg-[var(--color-primary)] hover:text-white'
                                   }`}
                                 >
-                                  <span className="text-lg">{slot.time}</span>
+                                  <span className="text-lg">{slot.time.slice(0, 5)}</span>
                                 </button>
                               )
                             })}
@@ -280,9 +288,9 @@ export default function MovieDetailPage() {
                 <span className="font-bold text-[var(--color-text-heading)]">
                   {selectedSlot.showtime.theater?.name}
                 </span>
-                <span className="text-2xl font-extrabold text-[var(--color-primary)]">{selectedSlot.slot.time}</span>
+                <span className="text-2xl font-extrabold text-[var(--color-primary)]">{selectedSlot.slot.time.slice(0, 5)}</span>
                 <span className="text-[var(--color-text-muted)] text-sm">
-                  {selectedSlot.showtime.format} &middot; Screen {selectedSlot.slot.screenId}
+                  {selectedSlot.showtime.format} 
                 </span>
               </div>
               <button

@@ -1,5 +1,7 @@
 package cinebook.movieService.utils;
 
+import cinebook.movieService.dto.request.ShowtimeSlotCreateUpdateRequestDTO;
+import cinebook.movieService.dto.request.ShowtimeSlotRequestDTO;
 import cinebook.movieService.exceptions.ValidationException;
 import cinebook.movieService.models.ShowtimeSlot;
 
@@ -25,15 +27,15 @@ public class ValidationUtils {
         }
     }
 
-    public static void validateSlots(List<ShowtimeSlot> slots) {
+    public static void validateSlots(List<ShowtimeSlotCreateUpdateRequestDTO> slots) {
         if (slots == null || slots.isEmpty()) {
             throw new ValidationException("At least one slot is required");
         }
-        for (ShowtimeSlot slot : slots) {
-            if (slot.getDate() == null || slot.getDate().isBlank()) {
+        for (ShowtimeSlotCreateUpdateRequestDTO slot : slots) {
+            if (slot.getDate() == null  ) {
                 throw new ValidationException("Date is required for each slot");
             }
-            if (slot.getTime() == null || slot.getTime().isBlank()) {
+            if (slot.getTime() == null ) {
                 throw new ValidationException("Time is required for each slot");
             }
             try {

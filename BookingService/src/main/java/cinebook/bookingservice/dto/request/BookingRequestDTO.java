@@ -36,7 +36,10 @@ public class BookingRequestDTO {
     private String screenId;
 
     @NotBlank(message = "time is required")
-    @Pattern(regexp = "^([01]\\d|2[0-3]):[0-5]\\d$", message = "time must be in HH:mm format")
+    @Pattern(
+            regexp = "^([01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d$",
+            message = "time must be in HH:mm:ss format"
+    )
     private String time;
 
     @NotEmpty(message = "seats must not be empty")

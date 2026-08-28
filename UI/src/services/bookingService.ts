@@ -70,3 +70,8 @@ export const getBookingByBookingId = (bookingId: string): Promise<BookingRespons
 export const getMyBookings = (page = 0, size = 10): Promise<PaginatedResponse<BookingResponseDTO>> => {
   return api.get('/bookings/user/me', { params: { page, size } }).then((r) => r.data)
 }
+
+// DELETE /bookings/{bookingId}
+export const deleteBooking = (bookingId: string): Promise<void> => {
+  return api.delete(`/bookings/${bookingId}`).then(() => undefined)
+}

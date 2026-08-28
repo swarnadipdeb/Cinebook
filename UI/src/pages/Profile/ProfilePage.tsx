@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useAuth } from '../../store/AuthContext'
 import { getUserInfo } from '../../services/userService'
-import { getMyBookings } from '../../services/bookingService'
+import { getMyBookings, deleteBooking } from '../../services/bookingService'
 import type { UserInfo, PaginatedResponse, BookingResponseDTO } from '../../types'
 
 const PAGE_SIZE = 10
@@ -13,6 +13,7 @@ export default function ProfilePage() {
   const [page, setPage] = useState(0)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [cancellingId, setCancellingId] = useState<string | null>(null)
 
   // Edit state
   const [editing, setEditing] = useState(false)
@@ -144,6 +145,22 @@ export default function ProfilePage() {
       setError(err instanceof Error ? err.message : 'Failed to load bookings')
     } finally {
       setLoading(false)
+    }
+  }
+
+  const handleCancelBooking = async (bookingId: string) => {
+    const ok = window.confirm('Are you sure you want to cancel this booking?')
+    if (!ok) return
+    setCancellingId(bookingId)
+    setError(null)
+    try {
+      await deleteBooking(bookingId)
+      // refresh current page
+      await loadPage(page)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to cancel booking')
+    } finally {
+      setCancellingId(null)
     }
   }
 
@@ -391,6 +408,17 @@ export default function ProfilePage() {
                           year: 'numeric',
                         })}
                       </div>
+                      {(booking.status === 'confirmed' || booking.status === 'ACTIVE') && (
+                        <div className="flex items-center justify-end mt-3">
+                          <button
+                            onClick={() => handleCancelBooking(booking.bookingId)}
+                            disabled={cancellingId === booking.bookingId}
+                            className="px-3 py-1.5 text-sm font-semibold rounded-lg bg-[var(--color-error)] text-white disabled:opacity-50 transition-colors hover:opacity-90"
+                          >
+                            {cancellingId === booking.bookingId ? 'Cancelling...' : 'Cancel'}
+                          </button>
+                        </div>
+                      )}
                     </div>
                   )
                 })}

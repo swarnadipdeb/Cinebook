@@ -23,6 +23,8 @@ Thumbs.db
 # Node / UI
 **/node_modules/
 UI/dist/
+UI/.env
+./Temp Ui Data Save
 
 # Docker
 *.jar
@@ -30,7 +32,7 @@ UI/dist/
 *.zip
 
 # Environment
-.ENV
+.ENV.txt
 .env
 github-credentials.txt
 

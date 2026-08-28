@@ -69,7 +69,6 @@ export default function ConfirmationPage() {
         totalPrice: totalPrice || 0,
       }
 
-      setLog(`${request.reservationId} - ${request.showtimeId} - Seats: ${request.seats.map((s) => `${s.row}${s.col}`).join(', ')} - Total: ${formatPrice(request.totalPrice)} - ${request.theaterId} - ${request.screenId} - ${request.time.toString()} - ${request.movieId}`) // Log the selected seats
       const response = await createBooking(request)
       setConfirmed(response)
     } catch(error: any) {
@@ -204,11 +203,6 @@ export default function ConfirmationPage() {
       {error && (
         <div className="mb-6 p-4 bg-[var(--color-bg)] rounded-lg text-[var(--color-error)] text-sm border border-[var(--color-error)]/30 text-center">
           {error}
-        </div>
-      )}
-      {log && (
-        <div className="mb-6 p-4 bg-[var(--color-bg)] rounded-lg text-[var(--color-text)] text-sm border border-[var(--color-border)]/30 text-center">
-          {log}
         </div>
       )}
       <div className="flex justify-center gap-4">

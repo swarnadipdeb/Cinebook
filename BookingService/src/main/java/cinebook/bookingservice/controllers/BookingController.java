@@ -58,4 +58,9 @@ public class BookingController {
         }
         return null;
     }
+
+    @DeleteMapping("/{bookingId}")
+    public  ResponseEntity deleteBookingById(@PathVariable String bookingId) {
+       return bookingService.deleteBooking(bookingId) ? ResponseEntity.noContent().build() : ResponseEntity.notFound().build();
+    }
 }

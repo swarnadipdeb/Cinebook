@@ -71,6 +71,7 @@ public class UserDetailsServiceImpl implements UserDetailsService
         }
         if(user != null){
              user = UserInfo.builder()
+                     .userId(user.getUserId())
                     .email(userInfoDto.getEmail())
                     .userName(userInfoDto.getUserName())
                     .isVerified(false)

@@ -9,6 +9,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
+import java.util.Date;
 import java.util.List;
 
 @RestController
@@ -25,8 +27,23 @@ public class ShowtimeController {
     public ResponseEntity<List<ShowtimeResponseDTO>> getShowtimesByMovie(
             @PathVariable String movieId,
             @RequestParam(required = false) String date,
+            @RequestParam(required = false) String startdate,
+            @RequestParam(required = false) String enddate,
             @RequestParam(defaultValue = "false") boolean embed) {
-        return ResponseEntity.ok(showtimeService.getShowtimesByMovie(movieId, date, embed));
+        // startdate & enddate validation check
+        if (startdate == null && enddate == null) {
+            // Both null - valid
+        } else if (startdate == null || enddate == null) {
+            return ResponseEntity.badRequest().build();
+        } else {
+            LocalDate start = LocalDate.parse(startdate);
+            LocalDate end = LocalDate.parse(enddate);
+
+            if (start.isAfter(end)) {
+                return ResponseEntity.badRequest().build();
+            }
+        }
+        return ResponseEntity.ok(showtimeService.getShowtimesByMovie(movieId, date, startdate, enddate,  embed));
     }
 
     @GetMapping("/theaters/{theaterId}/showtimes")

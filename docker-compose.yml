@@ -96,6 +96,11 @@ services:
       - "80:80"
     env_file:
       - UI/.env
+    environment:
+      VITE_LOGIN_USER_USERNAME: ${VITE_LOGIN_USER_USERNAME}
+      VITE_LOGIN_ADMIN_USERNAME: ${VITE_LOGIN_ADMIN_USERNAME}
+      VITE_LOGIN_USER_PASSWORD: ${VITE_LOGIN_USER_PASSWORD}
+      VITE_LOGIN_ADMIN_PASSWORD: ${VITE_LOGIN_ADMIN_PASSWORD}
     networks:
       - cinebook
 

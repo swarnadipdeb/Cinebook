@@ -6,6 +6,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.List;
 
 @Data
@@ -17,8 +19,8 @@ public class ShowtimeSlot {
     private String screenId;
 
     @NotBlank(message = "Time is required")
-    private String time;
+    private LocalTime time;
 
     @NotBlank(message = "Date is required")
-    private String date;
+    private LocalDate date;
 }

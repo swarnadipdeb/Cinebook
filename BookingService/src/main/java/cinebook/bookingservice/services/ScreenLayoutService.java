@@ -89,6 +89,8 @@ public class ScreenLayoutService {
 
     public ScreenLayout updateBookedSeats(String id, BookedSeatsUpdateDTO dto) {
         ScreenLayout layout = findById(id);
+        if(layout == null) {throw new RuntimeException("Screen layout not found for id=" + id);
+        }
         List<String> seats = layout.getBookedSeats();
 
         switch (dto.getOperation().toLowerCase()) {
@@ -128,8 +130,11 @@ public class ScreenLayoutService {
     }
 
     public ScreenLayout findById(String id) {
-        return screenLayoutRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Screen layout not found with id: " + id));
+        try {
+            return screenLayoutRepository.findByScreenId(id);
+        }catch (Exception e) {
+            return null;
+        }
     }
 
     public List<ScreenLayout> findByMovieIdAndTheaterId(String movieId, String theaterId) {

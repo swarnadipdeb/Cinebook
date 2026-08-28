@@ -1,5 +1,6 @@
 package cinebook.bookingservice.services;
 
+import cinebook.bookingservice.dto.request.BookedSeatsUpdateDTO;
 import cinebook.bookingservice.dto.request.BookingRequestDTO;
 import cinebook.bookingservice.dto.response.BookingResponseDTO;
 import cinebook.bookingservice.dto.response.PaginatedResponse;
@@ -16,7 +17,9 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -78,6 +81,26 @@ public class BookingService {
         log.info("Booking confirmed: bookingId={}, userId={}, seats={}", bookingId, userId, seatLabels);
 
         return toResponse(booking);
+    }
+
+    @Transactional
+    public Boolean deleteBooking(String bookingId) {
+        try {
+            Booking booking = bookingRepository
+                    .findByBookingId(bookingId)
+                    .orElseThrow(() -> new ResourceNotFoundException("Booking not found"));
+
+            String ScreenId = booking.getScreenId();
+            List<String> seats = booking.getSeats().stream()
+                    .map(seat -> seat.getRow() + seat.getCol())
+                    .toList();
+            bookingRepository.deleteByBookingId(bookingId);
+            BookedSeatsUpdateDTO rmvSeats = BookedSeatsUpdateDTO.builder().operation("remove").seats(seats).build();
+            screenLayoutService.updateBookedSeats(ScreenId, rmvSeats);
+        }catch (Exception e){
+            return false;
+        }
+        return true;
     }
 
     public BookingResponseDTO getBookingByBookingId(String bookingId, String userId) {

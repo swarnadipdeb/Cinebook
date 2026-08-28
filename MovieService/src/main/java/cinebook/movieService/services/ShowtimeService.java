@@ -20,10 +20,9 @@ import cinebook.movieService.utils.ValidationUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -36,9 +35,9 @@ public class ShowtimeService {
     private final ScreenLayoutPublisher screenLayoutPublisher;
     private final ScreenLayoutDeletePublisher screenLayoutDeletePublisher;
 
-    public List<ShowtimeResponseDTO> getShowtimesByMovie(String movieId, String date, boolean embedTheater) {
-        List<Showtime> showtimes = (date != null && !date.isBlank())
-                ? showtimeRepository.findByMovieIdAndDate(movieId, date)
+    public List<ShowtimeResponseDTO> getShowtimesByMovie(String movieId, String date, String startdate, String enddate, boolean embedTheater) {
+        List<Showtime> showtimes = ((startdate != null && !startdate.isBlank()) || (date!= null && !date.isBlank()))
+                ? ((date!= null && !date.isBlank()) ? showtimeRepository.findByMovieIdAndDate(movieId, LocalDate.parse(date)) : showtimeRepository.findByMovieIdAndDateRange(movieId,LocalDate.parse(startdate), LocalDate.parse(enddate)))
                 : showtimeRepository.findByMovieId(movieId);
 
         return toResponseDTOList(showtimes, embedTheater);
@@ -46,7 +45,7 @@ public class ShowtimeService {
 
     public List<ShowtimeResponseDTO> getShowtimesByTheater(String theaterId, String date, boolean embedTheater) {
         List<Showtime> showtimes = (date != null && !date.isBlank())
-                ? showtimeRepository.findByTheaterIdAndDate(theaterId, date)
+                ? showtimeRepository.findByTheaterIdAndDate(theaterId, LocalDate.parse(date))
                 : showtimeRepository.findByTheaterId(theaterId);
 
         return toResponseDTOList(showtimes, embedTheater);
@@ -59,7 +58,7 @@ public class ShowtimeService {
     }
 
     public ShowtimeResponseDTO createShowtime(ShowtimeCreateUpdateRequestDTO request) {
-        ValidationUtils.validateSlots(mapCreateSlotsToEntitySlots(request.getSlots()));
+        ValidationUtils.validateSlots(request.getSlots());
 
         if (!movieRepository.existsById(request.getMovieId())) {
             throw new ReferentialIntegrityException(
@@ -85,8 +84,8 @@ public class ShowtimeService {
             String screenId = UUID.randomUUID().toString();
             //coverting to ShowtimeSLot As per DB Schema
             slots.add(ShowtimeSlot.builder().screenId(screenId)
-                    .date(slot.getDate())
-                    .time(slot.getTime())
+                    .date(LocalDate.parse(slot.getDate()))
+                    .time(LocalTime.parse(slot.getTime()))
                     .build());
             //coverting to ScreenLayoutEvent For kafka publisher
             ScreenLayoutEvent.Pricing pricing = ScreenLayoutEvent.Pricing.builder()
@@ -123,7 +122,7 @@ public class ShowtimeService {
         Showtime existing = showtimeRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Showtime with ID '" + id + "' not found"));
 
-        ValidationUtils.validateSlots(mapCreateSlotsToEntitySlots(request.getSlots()));
+        ValidationUtils.validateSlots(request.getSlots());
 
         if (!movieRepository.existsById(request.getMovieId())) {
             throw new ReferentialIntegrityException(
@@ -140,8 +139,8 @@ public class ShowtimeService {
             String screenId = UUID.randomUUID().toString();
             slots.add(ShowtimeSlot.builder()
                     .screenId(screenId)
-                    .date(slot.getDate())
-                    .time(slot.getTime())
+                    .date(LocalDate.parse(slot.getDate()))
+                    .time(LocalTime.parse(slot.getTime()))
                     .build());
             ScreenLayoutEvent.Pricing pricing = ScreenLayoutEvent.Pricing.builder()
                     .premiumPrice(slot.getPremiumPrice())
@@ -188,12 +187,13 @@ public class ShowtimeService {
         }
     }
 
+    //unused
     public List<ShowtimeSlot> mapCreateSlotsToEntitySlots(List<ShowtimeSlotCreateUpdateRequestDTO> createSlots) {
         return createSlots.stream()
                 .map(s -> ShowtimeSlot.builder()
                         .screenId(UUID.randomUUID().toString())
-                        .time(s.getTime())
-                        .date(s.getDate())
+                        .time(LocalTime.parse(s.getTime()))
+                        .date(LocalDate.parse(s.getDate()))
                         .build())
                 .toList();
     }

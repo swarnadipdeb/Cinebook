@@ -15,6 +15,8 @@ public interface ScreenLayoutRepository extends MongoRepository<ScreenLayout, St
 
     List<ScreenLayout> findByMovieIdAndTheaterId(String movieId, String theaterId);
 
+    ScreenLayout findByScreenId(String screenId);
+
     void deleteByIdIn(List<String> ids);
 
     void deleteByScreenIdIn(List<String> screenIds);

@@ -402,8 +402,9 @@ export default function AdminPage() {
     const slots: ShowtimeSlotRequest[] = []
     for (const g of showtimeSlots) {
       for (const s of g.slots) {
+        const formattedTime = s.time.replace(/^([0-2]?\d:[0-5]\d):[0-5]\d$/, '$1')
         slots.push({
-          time: s.time, date: g.date,
+          time: formattedTime, date: g.date,
           premiumPrice: s.premiumPrice, regularPrice: s.regularPrice,
           rows: s.rows, cols: s.cols,
           premiumCols: s.premiumCols.split(',').map((c) => parseInt(c.trim(), 10)).filter((c) => !isNaN(c)),

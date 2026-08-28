@@ -9,10 +9,34 @@ export default function LoginPage() {
   const navigate = useNavigate()
   const redirect = location.state?.redirect || ROUTES.HOME
   const { login } = useAuth()
+  const envUserUsername = (import.meta.env.VITE_LOGIN_USER_USERNAME as string | undefined)?.trim() || ''
+  const envUserPassword = (import.meta.env.VITE_LOGIN_USER_PASSWORD as string | undefined)?.trim() || ''
+  const envAdminUsername = (import.meta.env.VITE_LOGIN_ADMIN_USERNAME as string | undefined)?.trim() || ''
+  const envAdminPassword = (import.meta.env.VITE_LOGIN_ADMIN_PASSWORD as string | undefined)?.trim() || ''
   const { form, errors, handleChange, setErrors } = useFormValidation<{ username: string; password: string }>({ username: '', password: '' })
   const [submitting, setSubmitting] = useState(false)
   const [requestError, setRequestError] = useState<string | null>(null)
 
+  const hasUserLoginEnv = Boolean(envUserUsername && envUserPassword)
+  const hasAdminLoginEnv = Boolean(envAdminUsername && envAdminPassword)
+
+  const handleAutoLogin = async (username: string, password: string) => {
+    setRequestError(null)
+    setSubmitting(true)
+
+    try {
+      const result = await login(username, password)
+      if (result.success) {
+        navigate(redirect)
+      } else {
+        setRequestError(result.error || 'Invalid username or password')
+      }
+    } catch {
+      setRequestError('An unexpected error occurred. Please try again.')
+    } finally {
+      setSubmitting(false)
+    }
+  }
 
   const validate = () => {
     const errs: Record<string, string> = {}
@@ -103,6 +127,25 @@ export default function LoginPage() {
               {requestError}
             </div>
           ) : null}
+
+          <div className="grid gap-3 sm:grid-cols-2">
+            <button
+              type="button"
+              onClick={() => handleAutoLogin(envUserUsername, envUserPassword)}
+              disabled={submitting || !hasUserLoginEnv}
+              className="mt-1 py-4 bg-[var(--color-blue)] text-white rounded-lg font-bold text-base transition-colors duration-150 hover:bg-[var(--color-blue-hover)] disabled:opacity-60 disabled:cursor-not-allowed"
+            >
+              Login as User
+            </button>
+            <button
+              type="button"
+              onClick={() => handleAutoLogin(envAdminUsername, envAdminPassword)}
+              disabled={submitting || !hasAdminLoginEnv}
+              className="mt-1 py-4 bg-[var(--color-primary)] text-white rounded-lg font-bold text-base transition-colors duration-150 hover:bg-[var(--color-primary-hover)] disabled:opacity-60 disabled:cursor-not-allowed"
+            >
+              Login as Admin
+            </button>
+          </div>
 
           <button
             type="submit"
