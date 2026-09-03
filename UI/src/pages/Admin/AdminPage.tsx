@@ -127,6 +127,7 @@ export default function AdminPage() {
   const [showtimeDeleteConfirm, setShowtimeDeleteConfirm] = useState<string | null>(null)
   const [showtimeDeletingId, setShowtimeDeletingId] = useState<string | null>(null)
   const [showtimeEditing, setShowtimeEditing] = useState(false)
+  const [collapsedDateGroups, setCollapsedDateGroups] = useState<Set<number>>(new Set())
 
   /* ---- Fetch data ---- */
 
@@ -316,6 +317,7 @@ export default function AdminPage() {
   const openShowtimeCreate = () => {
     setShowtimeFormMovieId(''); setShowtimeFormTheaterId(''); setShowtimeFormat('2D')
     setShowtimeSlots([{ ...emptyDateGroup, slots: [{ ...emptySlot }] }]); setShowtimeFormError(''); setEditingShowtime(null); setShowtimeModal('create')
+    setCollapsedDateGroups(new Set())
   }
 
   const openShowtimeEdit = async (id: string) => {
@@ -374,12 +376,19 @@ export default function AdminPage() {
     setShowtimeFormTheaterId(showtime.theaterId)
     setShowtimeFormat(showtime.format)
     setShowtimeSlots(groups.length ? groups : [{ ...emptyDateGroup, slots: [{ ...emptySlot }] }])
+    setCollapsedDateGroups(new Set())
     setShowtimeEditing(false)
   }
 
   const closeShowtimeModal = () => { setShowtimeModal(null); setEditingShowtime(null); setShowtimeFormError(''); setShowtimeEditing(false) }
 
   const addDateGroup = () => setShowtimeSlots((p) => [...p, { ...emptyDateGroup, date: new Date().toISOString().slice(0, 10), slots: [{ ...emptySlot }] }])
+  const toggleDateGroup = (index: number) => setCollapsedDateGroups((current) => {
+    const next = new Set(current)
+    if (next.has(index)) next.delete(index)
+    else next.add(index)
+    return next
+  })
   const removeDateGroup = (di: number) => setShowtimeSlots((p) => p.filter((_, i) => i !== di))
   const updateDate = (di: number, date: string) => setShowtimeSlots((p) => p.map((g, i) => i === di ? { ...g, date } : g))
 
@@ -566,18 +575,6 @@ export default function AdminPage() {
                     <span className="text-[var(--color-text-muted)] text-[13px]">
                       {getTheaterName(st.theaterId)} &middot; {st.format} &middot; {st.slots.length} slot{st.slots.length > 1 ? 's' : ''}
                     </span>
-                    {/* {(() => {
-                      const dateSlots = new Map<string, string[]>()
-                      for (const s of st.slots) {
-                        if (!dateSlots.has(s.date)) dateSlots.set(s.date, [])
-                        dateSlots.get(s.date)!.push(s.time)
-                      }
-                      return (
-                        <span className="text-[var(--color-text-muted)] text-[12px]">
-                          {Array.from(dateSlots.entries()).map(([date, times]) => `${date}: ${times.join(', ')}`).join('  ·  ')}
-                        </span>
-                      )
-                    })()} */}
                   </div>
                   <div className="flex gap-2 flex-shrink-0">
                     <button onClick={() => openShowtimeEdit(st.id)} className="px-3 py-2 rounded text-[13px] font-semibold bg-[var(--color-bg-elevated)] text-[var(--color-text)] transition-all duration-150 hover:bg-[var(--color-primary)] hover:text-white">Edit</button>
@@ -703,6 +700,16 @@ export default function AdminPage() {
                 <div key={di} className="border border-[var(--color-border)] rounded-lg p-4 flex flex-col gap-3">
                   <div className="flex items-center justify-between gap-3">
                     <div className="flex items-center gap-3">
+                      <button
+                        type="button"
+                        onClick={() => toggleDateGroup(di)}
+                        aria-expanded={!collapsedDateGroups.has(di)}
+                        aria-controls={`date-group-slots-${di}`}
+                        className="w-7 h-7 flex items-center justify-center rounded bg-[var(--color-bg-elevated)] text-[var(--color-text)] text-lg font-bold transition-transform hover:bg-[var(--color-primary)] hover:text-white"
+                        title={collapsedDateGroups.has(di) ? 'Expand date group' : 'Collapse date group'}
+                      >
+                        <span className={`transition-transform duration-150 ${collapsedDateGroups.has(di) ? '' : 'rotate-90'}`}>&gt;</span>
+                      </button>
                       <span className="text-sm font-bold text-[var(--color-primary)]">Date Group {showtimeSlots.length > 1 ? di + 1 : ''}</span>
                       <div className="w-[200px]">
                         <DatePicker value={group.date} onChange={(v) => updateDate(di, v)} />
@@ -716,27 +723,31 @@ export default function AdminPage() {
                     </div>
                   </div>
 
-                  {group.slots.map((slot, si) => (
-                    <div key={si} className="ml-4 pl-4 border-l-2 border-[var(--color-border)] flex flex-col gap-3">
-                      <div className="flex justify-between items-center">
-                        <span className="text-xs font-semibold text-[var(--color-text-muted)]">Slot {si + 1}</span>
-                        {group.slots.length > 1 && (
-                          <button type="button" onClick={() => removeSlot(di, si)} className="text-xs text-[var(--color-error)] font-semibold hover:opacity-80">Remove</button>
-                        )}
-                      </div>
-                      <div className="grid grid-cols-3 gap-3">
-                        <FormField label="Time" field={`slot-${di}-${si}-time`} value={slot.time} onChange={(v) => updateSlot(di, si, 'time', v)} type="time" required />
-                        <NumericField label="Rows" field={`slot-${di}-${si}-rows`} value={slot.rows} onChange={(v) => updateSlot(di, si, 'rows', v)} />
-                        <NumericField label="Cols" field={`slot-${di}-${si}-cols`} value={slot.cols} onChange={(v) => updateSlot(di, si, 'cols', v)} />
-                      </div>
-                      <div className="grid grid-cols-4 gap-3">
-                        <NumericField label="Regular Price" field={`slot-${di}-${si}-regular`} value={slot.regularPrice} onChange={(v) => updateSlot(di, si, 'regularPrice', v)} step={0.5} />
-                        <NumericField label="Premium Price" field={`slot-${di}-${si}-premium`} value={slot.premiumPrice} onChange={(v) => updateSlot(di, si, 'premiumPrice', v)} step={0.5} />
-                        <NumericField label="Aisle After Col" field={`slot-${di}-${si}-aisle`} value={slot.aisleAfterCol} onChange={(v) => updateSlot(di, si, 'aisleAfterCol', v)} />
-                        <FormField label="Premium Cols" field={`slot-${di}-${si}-premiumCols`} value={slot.premiumCols} onChange={(v) => updateSlot(di, si, 'premiumCols', v)} placeholder="1, 2, 19, 20" />
-                      </div>
+                  {!collapsedDateGroups.has(di) && (
+                    <div id={`date-group-slots-${di}`} className="flex flex-col gap-3">
+                      {group.slots.map((slot, si) => (
+                        <div key={si} className="ml-4 pl-4 border-l-2 border-[var(--color-border)] flex flex-col gap-3">
+                          <div className="flex justify-between items-center">
+                            <span className="text-xs font-semibold text-[var(--color-text-muted)]">Slot {si + 1}</span>
+                            {group.slots.length > 1 && (
+                              <button type="button" onClick={() => removeSlot(di, si)} className="text-xs text-[var(--color-error)] font-semibold hover:opacity-80">Remove</button>
+                            )}
+                          </div>
+                          <div className="grid grid-cols-3 gap-3">
+                            <FormField label="Time" field={`slot-${di}-${si}-time`} value={slot.time} onChange={(v) => updateSlot(di, si, 'time', v)} type="time" required />
+                            <NumericField label="Rows" field={`slot-${di}-${si}-rows`} value={slot.rows} onChange={(v) => updateSlot(di, si, 'rows', v)} />
+                            <NumericField label="Cols" field={`slot-${di}-${si}-cols`} value={slot.cols} onChange={(v) => updateSlot(di, si, 'cols', v)} />
+                          </div>
+                          <div className="grid grid-cols-4 gap-3">
+                            <NumericField label="Regular Price" field={`slot-${di}-${si}-regular`} value={slot.regularPrice} onChange={(v) => updateSlot(di, si, 'regularPrice', v)} step={0.5} />
+                            <NumericField label="Premium Price" field={`slot-${di}-${si}-premium`} value={slot.premiumPrice} onChange={(v) => updateSlot(di, si, 'premiumPrice', v)} step={0.5} />
+                            <NumericField label="Aisle After Col" field={`slot-${di}-${si}-aisle`} value={slot.aisleAfterCol} onChange={(v) => updateSlot(di, si, 'aisleAfterCol', v)} />
+                            <FormField label="Premium Cols" field={`slot-${di}-${si}-premiumCols`} value={slot.premiumCols} onChange={(v) => updateSlot(di, si, 'premiumCols', v)} placeholder="1, 2, 19, 20" />
+                          </div>
+                        </div>
+                      ))}
                     </div>
-                  ))}
+                  )}
                 </div>
               ))}
 
