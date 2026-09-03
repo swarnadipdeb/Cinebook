@@ -2,9 +2,12 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import { useAuth } from '../../store/AuthContext'
 import { getUserInfo } from '../../services/userService'
 import { getMyBookings, deleteBooking } from '../../services/bookingService'
+import { getMovieById } from '../../services/movieService'
+import { getTheater } from '../../services/theaterService'
 import type { UserInfo, PaginatedResponse, BookingResponseDTO } from '../../types'
+import { formatPrice } from '../../utils/formatPrice'
 
-const PAGE_SIZE = 10
+const PAGE_SIZE = 5
 
 export default function ProfilePage() {
   const { user, logout } = useAuth()
@@ -14,6 +17,7 @@ export default function ProfilePage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [cancellingId, setCancellingId] = useState<string | null>(null)
+  const [bookingDetails, setBookingDetails] = useState<Record<string, { movieName: string; theaterName: string }>>({})
 
   // Edit state
   const [editing, setEditing] = useState(false)
@@ -27,6 +31,32 @@ export default function ProfilePage() {
   const [removePic, setRemovePic] = useState(false)
   const picInputRef = useRef<HTMLInputElement>(null)
 
+  const loadBookingDetails = useCallback(async (bookings: BookingResponseDTO[]) => {
+    if (!bookings.length) {
+      setBookingDetails({})
+      return
+    }
+
+    const entries = await Promise.all(
+      bookings.map(async (booking) => {
+        const [movie, theater] = await Promise.all([
+          getMovieById(booking.movieId),
+          getTheater(booking.theaterId),
+        ])
+
+        return [
+          booking.id,
+          {
+            movieName: movie?.title || 'Unknown movie',
+            theaterName: theater?.name || 'Unknown theater',
+          },
+        ] as const
+      }),
+    )
+
+    setBookingDetails(Object.fromEntries(entries))
+  }, [])
+
   const fetchData = useCallback(async () => {
     if (!user) return
     setLoading(true)
@@ -39,6 +69,7 @@ export default function ProfilePage() {
       ])
       setUserInfo(userRes)
       setBookingsPage(bookingsRes)
+      await loadBookingDetails(bookingsRes.content)
       if (userRes.profilePic) {
         localStorage.setItem('profilePic', userRes.profilePic)
       } else {
@@ -50,7 +81,7 @@ export default function ProfilePage() {
     } finally {
       setLoading(false)
     }
-  }, [user])
+  }, [loadBookingDetails, user])
 
   useEffect(() => {
     fetchData()
@@ -141,6 +172,7 @@ export default function ProfilePage() {
       const res = await getMyBookings(p, PAGE_SIZE)
       setBookingsPage(res)
       setPage(p)
+      await loadBookingDetails(res.content)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load bookings')
     } finally {
@@ -178,6 +210,23 @@ export default function ProfilePage() {
   const firstName = userInfo?.firstName || ''
   const lastName = userInfo?.lastName || ''
   const fullName = `${firstName} ${lastName}`.trim() || user.name
+
+  const formatBookingTime = (value: string | undefined) => {
+    if (!value) return 'Not available'
+
+    const parsed = new Date(value)
+    if (Number.isNaN(parsed.getTime())) {
+      return value
+    }
+
+    return parsed.toLocaleString('en-IN', {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit',
+    })
+  }
 
   if (loading && !userInfo) {
     return (
@@ -379,6 +428,9 @@ export default function ProfilePage() {
               <div className="space-y-4 mb-6">
                 {bookingsPage.content.map((booking) => {
                   const seatCount = booking.seats?.length ?? 0
+                  const bookingMeta = bookingDetails[booking.id]
+                  const seatPositions = booking.seats?.map((seat) => `${seat.row}${seat.col}`).join(', ') || 'No seats selected'
+
                   return (
                     <div key={booking.id} className="bg-[var(--color-bg-card)] rounded-xl p-4">
                       <div className="flex items-center justify-between mb-2">
@@ -393,12 +445,32 @@ export default function ProfilePage() {
                           {booking.status}
                         </span>
                       </div>
-                      <div className="flex items-center justify-between text-sm">
+
+                      <div className="space-y-2 text-sm text-[var(--color-text)]">
+                        <div>
+                          <span className="text-[var(--color-text-muted)]">Movie: </span>
+                          <span className="font-medium">{bookingMeta?.movieName || 'Loading...'}</span>
+                        </div>
+                        <div>
+                          <span className="text-[var(--color-text-muted)]">Theater: </span>
+                          <span className="font-medium">{bookingMeta?.theaterName || 'Loading...'}</span>
+                        </div>
+                        <div>
+                          <span className="text-[var(--color-text-muted)]">Time: </span>
+                          <span className="font-medium">{formatBookingTime(booking.time)}</span>
+                        </div>
+                        <div>
+                          <span className="text-[var(--color-text-muted)]">Seats: </span>
+                          <span className="font-medium">{seatPositions}</span>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center justify-between text-sm mt-3">
                         <span className="text-[var(--color-text-muted)]">
                           {seatCount} seat{seatCount > 1 ? 's' : ''}
                         </span>
                         <span className="font-bold text-[var(--color-primary)]">
-                          ₹{booking.totalPrice.toFixed(2)}
+                          {formatPrice(booking.totalPrice)}
                         </span>
                       </div>
                       <div className="text-xs text-[var(--color-text-muted)] mt-1">

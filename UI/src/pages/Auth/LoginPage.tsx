@@ -13,7 +13,7 @@ export default function LoginPage() {
   const envUserPassword = (import.meta.env.VITE_LOGIN_USER_PASSWORD as string | undefined)?.trim() || ''
   const envAdminUsername = (import.meta.env.VITE_LOGIN_ADMIN_USERNAME as string | undefined)?.trim() || ''
   const envAdminPassword = (import.meta.env.VITE_LOGIN_ADMIN_PASSWORD as string | undefined)?.trim() || ''
-  const { form, errors, handleChange, setErrors } = useFormValidation<{ username: string; password: string }>({ username: '', password: '' })
+  const { form, errors, handleChange: updateForm, setErrors } = useFormValidation<{ username: string; password: string }>({ username: '', password: '' })
   const [submitting, setSubmitting] = useState(false)
   const [requestError, setRequestError] = useState<string | null>(null)
 
@@ -38,13 +38,50 @@ export default function LoginPage() {
     }
   }
 
-  const validate = () => {
-    const errs: Record<string, string> = {}
-    if (!form.username.trim()) errs.username = 'Username is required'
-    if (!form.password) errs.password = 'Password is required'
-    else if (form.password.length < 6)
-      errs.password = 'Password must be at least 6 characters'
+  type Form = typeof form
+  type FieldName = keyof Form
+
+  const validateField = (name: FieldName, value: string) => {
+    if (name === 'username') {
+      if (!value.trim()) return 'Username is required'
+      if (value.length < 3 || value.length > 20) return 'Username must be 3 to 20 characters'
+      if (!/^[a-zA-Z0-9_]+$/.test(value)) return 'Username may contain only letters, numbers, and underscores'
+    }
+    if (name === 'password') {
+      if (!value) return 'Password is required'
+      if (value.length < 8) return 'Password must be at least 8 characters'
+      if (!/[A-Z]/.test(value) || !/[a-z]/.test(value) || !/[0-9]/.test(value) || !/[^A-Za-z0-9]/.test(value)) {
+        return 'Password must include uppercase, lowercase, number, and special character'
+      }
+    }
+    return undefined
+  }
+
+  const validate = (values: Form = form) => {
+    const errs: Partial<Record<FieldName, string>> = {}
+    ;(Object.keys(values) as FieldName[]).forEach((name) => {
+      const error = validateField(name, values[name])
+      if (error) errs[name] = error
+    })
     return errs
+  }
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const field = e.target.name as FieldName
+    const { value } = e.target
+    updateForm(e)
+    setErrors((currentErrors) => {
+      const nextErrors = { ...currentErrors }
+      const error = validateField(field, value)
+      if (error) nextErrors[field] = error
+      else delete nextErrors[field]
+      return nextErrors
+    })
+  }
+
+  const handleBlur = (e: React.FocusEvent<HTMLInputElement>) => {
+    const field = e.target.name as FieldName
+    setErrors((currentErrors) => ({ ...currentErrors, [field]: validateField(field, form[field]) }))
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -91,6 +128,7 @@ export default function LoginPage() {
               autoComplete="username"
               value={form.username}
               onChange={handleChange}
+              onBlur={handleBlur}
               className={`px-4 py-3 bg-[var(--color-bg)] rounded-lg text-[var(--color-text-heading)] text-base transition-all duration-150 outline-none placeholder:text-[var(--color-text-muted)] ${
                 errors.username ? 'ring-2 ring-[var(--color-error)]' : 'focus:ring-2 focus:ring-[var(--color-primary)]'
               }`}
@@ -111,6 +149,7 @@ export default function LoginPage() {
               autoComplete="current-password"
               value={form.password}
               onChange={handleChange}
+              onBlur={handleBlur}
               className={`px-4 py-3 bg-[var(--color-bg)] rounded-lg text-[var(--color-text-heading)] text-base transition-all duration-150 outline-none placeholder:text-[var(--color-text-muted)] ${
                 errors.password ? 'ring-2 ring-[var(--color-error)]' : 'focus:ring-2 focus:ring-[var(--color-primary)]'
               }`}

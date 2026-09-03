@@ -122,9 +122,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(userData)
       localStorage.setItem('user', JSON.stringify(userData))
       return { success: true }
-    } catch (err) {
+    } catch (err:any) {
       const message = getErrorMessage(err, 'Login failed')
-      console.log(err)
       return { success: false, error: message }
     } finally {
       setLoading(false)

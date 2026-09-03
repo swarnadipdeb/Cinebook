@@ -7,27 +7,82 @@ import { useFormValidation, EMAIL_REGEX } from '../../hooks/useFormValidation'
 export default function RegisterPage() {
   const navigate = useNavigate()
   const { register } = useAuth()
-  const { form, errors, handleChange, setErrors } = useFormValidation<{ userName: string; email: string; password: string; confirmPassword: string; firstName: string; lastName: string; phone: string }>({
+  const { form, errors, handleChange: updateForm, setErrors } = useFormValidation<{ userName: string; email: string; password: string; confirmPassword: string; firstName: string; lastName: string; phone: string }>({
     userName: '', email: '', password: '', confirmPassword: '', firstName: '', lastName: '', phone: ''
   })
   const [submitting, setSubmitting] = useState(false)
   const [requestError, setRequestError] = useState<string | null>(null)
 
-  const validate = () => {
-    const errs: Record<string, string> = {}
-    if (!form.userName.trim()) errs.userName = 'Username is required'
-    if (!form.email) errs.email = 'Email is required'
-    else if (!EMAIL_REGEX.test(form.email))
-      errs.email = 'Enter a valid email'
-    if (!form.password) errs.password = 'Password is required'
-    else if (form.password.length < 6)
-      errs.password = 'Password must be at least 6 characters'
-    if (form.password !== form.confirmPassword)
-      errs.confirmPassword = 'Passwords do not match'
-    if (!form.firstName.trim()) errs.firstName = 'First name is required'
-    if (!form.lastName.trim()) errs.lastName = 'Last name is required'
-    if (!form.phone.trim()) errs.phone = 'Phone number is required'
+  type Form = typeof form
+  type FieldName = keyof Form
+
+  const validateField = (name: FieldName, value: string, values: Form = form) => {
+    if (name === 'userName') {
+      if (!value.trim()) return 'Username is required'
+      if (value.length < 3 || value.length > 20) return 'Username must be 3 to 20 characters'
+      if (!/^[a-zA-Z0-9_]+$/.test(value)) return 'Username may contain only letters, numbers, and underscores'
+    }
+    if (name === 'email') {
+      if (!value.trim()) return 'Email is required'
+      if (!EMAIL_REGEX.test(value)) return 'Enter a valid email'
+    }
+    if (name === 'password') {
+      if (!value) return 'Password is required'
+      if (value.length < 8) return 'Password must be at least 8 characters'
+      if (!/[A-Z]/.test(value) || !/[a-z]/.test(value) || !/[0-9]/.test(value) || !/[^A-Za-z0-9]/.test(value)) {
+        return 'Password must include uppercase, lowercase, number, and special character'
+      }
+    }
+    if (name === 'confirmPassword') {
+      if (!value) return 'Please confirm your password'
+      if (value !== values.password) return 'Passwords do not match'
+    }
+    if (name === 'firstName' || name === 'lastName') {
+      const label = name === 'firstName' ? 'First name' : 'Last name'
+      if (!value.trim()) return `${label} is required`
+      if (value.length > 50) return `${label} must be no more than 50 characters`
+      if (!/^[A-Za-z]+(?:[ '\-][A-Za-z]+)*$/.test(value.trim())) return `${label} may contain only letters, spaces, hyphens, and apostrophes`
+    }
+    if (name === 'phone') {
+      if (!value.trim()) return 'Phone number is required'
+      const digits = value.replace(/[\s-]/g, '').replace(/^\+/, '')
+      if (!/^\d{10,15}$/.test(digits)) return 'Phone number must contain 10 to 15 digits'
+    }
+    return undefined
+  }
+
+  const validate = (values: Form = form) => {
+    const errs: Partial<Record<FieldName, string>> = {}
+    ;(Object.keys(values) as FieldName[]).forEach((name) => {
+      const error = validateField(name, values[name], values)
+      if (error) errs[name] = error
+    })
     return errs
+  }
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target
+    const field = name as FieldName
+    const nextForm = { ...form, [field]: value }
+    updateForm(e)
+    setErrors((currentErrors) => {
+      const nextErrors = { ...currentErrors }
+      const error = validateField(field, value, nextForm)
+      if (error) nextErrors[field] = error
+      else delete nextErrors[field]
+      if (field === 'password' || field === 'confirmPassword') {
+        const confirmError = validateField('confirmPassword', nextForm.confirmPassword, nextForm)
+        if (confirmError) nextErrors.confirmPassword = confirmError
+        else delete nextErrors.confirmPassword
+      }
+      return nextErrors
+    })
+  }
+
+  const handleBlur = (e: React.FocusEvent<HTMLInputElement>) => {
+    const field = e.target.name as FieldName
+    const error = validateField(field, form[field], form)
+    setErrors((currentErrors) => ({ ...currentErrors, [field]: error }))
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -74,6 +129,7 @@ export default function RegisterPage() {
               autoComplete="username"
               value={form.userName}
               onChange={handleChange}
+              onBlur={handleBlur}
               className={`px-4 py-2.5 bg-[var(--color-bg)] rounded-lg text-[var(--color-text-heading)] text-base transition-all duration-150 outline-none placeholder:text-[var(--color-text-muted)] ${
                 errors.userName ? 'ring-2 ring-[var(--color-error)]' : 'focus:ring-2 focus:ring-[var(--color-primary)]'
               }`}
@@ -94,6 +150,7 @@ export default function RegisterPage() {
               autoComplete="email"
               value={form.email}
               onChange={handleChange}
+              onBlur={handleBlur}
               className={`px-4 py-2.5 bg-[var(--color-bg)] rounded-lg text-[var(--color-text-heading)] text-base transition-all duration-150 outline-none placeholder:text-[var(--color-text-muted)] ${
                 errors.email ? 'ring-2 ring-[var(--color-error)]' : 'focus:ring-2 focus:ring-[var(--color-primary)]'
               }`}
@@ -114,10 +171,11 @@ export default function RegisterPage() {
               autoComplete="new-password"
               value={form.password}
               onChange={handleChange}
+              onBlur={handleBlur}
               className={`px-4 py-2.5 bg-[var(--color-bg)] rounded-lg text-[var(--color-text-heading)] text-base transition-all duration-150 outline-none placeholder:text-[var(--color-text-muted)] ${
                 errors.password ? 'ring-2 ring-[var(--color-error)]' : 'focus:ring-2 focus:ring-[var(--color-primary)]'
               }`}
-              placeholder="At least 6 characters"
+              placeholder="At least 8 characters"
               aria-describedby={errors.password ? 'password-error' : undefined}
             />
             {errors.password && (
@@ -134,6 +192,7 @@ export default function RegisterPage() {
               autoComplete="new-password"
               value={form.confirmPassword}
               onChange={handleChange}
+              onBlur={handleBlur}
               className={`px-4 py-2.5 bg-[var(--color-bg)] rounded-lg text-[var(--color-text-heading)] text-base transition-all duration-150 outline-none placeholder:text-[var(--color-text-muted)] ${
                 errors.confirmPassword ? 'ring-2 ring-[var(--color-error)]' : 'focus:ring-2 focus:ring-[var(--color-primary)]'
               }`}
@@ -157,13 +216,18 @@ export default function RegisterPage() {
       autoComplete="given-name"
       value={form.firstName}
       onChange={handleChange}
+      onBlur={handleBlur}
       className={`w-full px-4 py-2.5 bg-[var(--color-bg)] rounded-lg text-[var(--color-text-heading)] text-base transition-all duration-150 outline-none placeholder:text-[var(--color-text-muted)] ${
         errors.firstName
           ? 'ring-2 ring-[var(--color-error)]'
           : 'focus:ring-2 focus:ring-[var(--color-primary)]'
       }`}
       placeholder="John"
+      aria-describedby={errors.firstName ? 'firstName-error' : undefined}
     />
+    {errors.firstName && (
+      <span id="firstName-error" className="text-[12px] text-[var(--color-error)]">{errors.firstName}</span>
+    )}
   </div>
 
   <div className="flex flex-col gap-1 flex-1 min-w-0">
@@ -177,13 +241,18 @@ export default function RegisterPage() {
       autoComplete="family-name"
       value={form.lastName}
       onChange={handleChange}
+      onBlur={handleBlur}
       className={`w-full px-4 py-2.5 bg-[var(--color-bg)] rounded-lg text-[var(--color-text-heading)] text-base transition-all duration-150 outline-none placeholder:text-[var(--color-text-muted)] ${
         errors.lastName
           ? 'ring-2 ring-[var(--color-error)]'
           : 'focus:ring-2 focus:ring-[var(--color-primary)]'
       }`}
       placeholder="Doe"
+      aria-describedby={errors.lastName ? 'lastName-error' : undefined}
     />
+    {errors.lastName && (
+      <span id="lastName-error" className="text-[12px] text-[var(--color-error)]">{errors.lastName}</span>
+    )}
   </div>
 </div>
 
@@ -196,6 +265,7 @@ export default function RegisterPage() {
               autoComplete="tel"
               value={form.phone}
               onChange={handleChange}
+              onBlur={handleBlur}
               className={`px-4 py-2.5 bg-[var(--color-bg)] rounded-lg text-[var(--color-text-heading)] text-base transition-all duration-150 outline-none placeholder:text-[var(--color-text-muted)] ${
                 errors.phone ? 'ring-2 ring-[var(--color-error)]' : 'focus:ring-2 focus:ring-[var(--color-primary)]'
               }`}

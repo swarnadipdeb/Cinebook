@@ -110,15 +110,17 @@ export const authService = {
       })
 
       if (!response.ok) {
-        let errorMessage = 'Login failed ' + `${response.status.toString()} (${response.statusText})`
-
+        let errorMessage = 'Login failed ';
         try {
-          const errorText = await response.text()
-          if (errorText) {
-            errorMessage = `${errorText} ${response.status.toString()} (${response.statusText})`
+          const errordata = await response.json().catch(() => null)
+          if (errordata) {
+            errorMessage = `${errordata.error} ${errordata.status.toString()} (${errordata.path})`
+          }
+          if(errordata.status === 403) {
+            errorMessage = 'Invalid username or password'
           }
         } catch {
-          errorMessage = `Unkonwn Error ${response.status.toString()} (${response.statusText})`
+          errorMessage = `Unkonwn Error`
         }
 
         throw new Error(errorMessage)
