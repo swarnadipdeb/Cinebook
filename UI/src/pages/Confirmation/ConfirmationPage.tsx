@@ -64,10 +64,12 @@ export default function ConfirmationPage() {
         movieId: movie.id,
         theaterId: showtime.theaterId,
         screenId: slot.screenId,
+        date: slot.date,
         time: slot.time,
         seats: bookingSeats,
         totalPrice: totalPrice || 0,
       }
+      console.log('Booking request:', slot.date);
 
       const response = await createBooking(request)
       setConfirmed(response)

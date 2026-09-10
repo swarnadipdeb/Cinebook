@@ -166,6 +166,7 @@ export interface BookingRequestDTO {
   movieId: string
   theaterId: string
   screenId: string
+  date: string
   time: string
   seats: BookingSeat[]
   totalPrice: number
@@ -178,6 +179,7 @@ export interface BookingResponseDTO {
   movieId: string
   showtimeId: string
   theaterId: string
+  date: string
   time: string
   screenId: string
   seats: BookingSeat[]

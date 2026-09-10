@@ -21,6 +21,7 @@ public class BookingResponseDTO {
     private String showtimeId;
     private String theaterId;
     private String time;
+    private String date;
     private String screenId;
     private List<BookingSeat> seats;
     private Double totalPrice;

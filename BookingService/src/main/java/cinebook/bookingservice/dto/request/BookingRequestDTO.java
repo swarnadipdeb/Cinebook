@@ -42,6 +42,8 @@ public class BookingRequestDTO {
     )
     private String time;
 
+    private String date;
+
     @NotEmpty(message = "seats must not be empty")
     private List<BookingSeat> seats;
 

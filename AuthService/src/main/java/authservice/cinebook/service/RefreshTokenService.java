@@ -25,7 +25,7 @@ public class RefreshTokenService {
         RefreshToken refreshToken = RefreshToken.builder()
                     .userInfo(userInfoExtracted)
                     .token(UUID.randomUUID().toString())
-                    .expiryDate(Instant.now().plusSeconds(10800))
+                    .expiryDate(Instant.now().plusSeconds(3 * 24 * 60 * 60)) // 3 days
                     .build();
         return refreshTokenRepository.save(refreshToken);
     }

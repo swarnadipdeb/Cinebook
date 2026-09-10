@@ -182,6 +182,7 @@ export default function ProfilePage() {
 
   const handleCancelBooking = async (bookingId: string) => {
     const ok = window.confirm('Are you sure you want to cancel this booking?')
+    console.log(bookingsPage)
     if (!ok) return
     setCancellingId(bookingId)
     setError(null)
@@ -226,6 +227,21 @@ export default function ProfilePage() {
       hour: 'numeric',
       minute: '2-digit',
     })
+  }
+
+  const isBookingExpired = (value: string | undefined) => {
+    if (!value) return false
+
+    const dateParts = value.match(/^(\d{4})-(\d{2})-(\d{2})/)
+    const bookingDate = dateParts
+      ? new Date(Number(dateParts[1]), Number(dateParts[2]) - 1, Number(dateParts[3]))
+      : new Date(value)
+    if (Number.isNaN(bookingDate.getTime())) return false
+
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    bookingDate.setHours(0, 0, 0, 0)
+    return bookingDate < today
   }
 
   if (loading && !userInfo) {
@@ -430,6 +446,8 @@ export default function ProfilePage() {
                   const seatCount = booking.seats?.length ?? 0
                   const bookingMeta = bookingDetails[booking.id]
                   const seatPositions = booking.seats?.map((seat) => `${seat.row}${seat.col}`).join(', ') || 'No seats selected'
+                  const expired = isBookingExpired(booking.createdAt)
+                  const bookingStatus = expired ? 'EXPIRED' : 'CONFIRMED'
 
                   return (
                     <div key={booking.id} className="bg-[var(--color-bg-card)] rounded-xl p-4">
@@ -438,11 +456,11 @@ export default function ProfilePage() {
                           #{booking.bookingId}
                         </span>
                         <span className={`text-xs px-2 py-1 rounded-full font-semibold ${
-                          booking.status === 'CONFIRMED' || booking.status === 'ACTIVE'
+                          bookingStatus === 'CONFIRMED' || bookingStatus === 'ACTIVE'
                             ? 'bg-[var(--color-seat-available)]/20 text-[var(--color-seat-available)]'
                             : 'bg-[var(--color-text-muted)]/20 text-[var(--color-text-muted)]'
                         }`}>
-                          {booking.status}
+                          {bookingStatus}
                         </span>
                       </div>
 
@@ -474,13 +492,9 @@ export default function ProfilePage() {
                         </span>
                       </div>
                       <div className="text-xs text-[var(--color-text-muted)] mt-1">
-                        {new Date(booking.createdAt).toLocaleDateString('en-IN', {
-                          day: 'numeric',
-                          month: 'short',
-                          year: 'numeric',
-                        })}
+                        {booking.date}
                       </div>
-                      {(booking.status === 'confirmed' || booking.status === 'ACTIVE') && (
+                      {!expired && (booking.status === 'confirmed' || booking.status === 'CONFIRMED' || booking.status === 'ACTIVE') && (
                         <div className="flex items-center justify-end mt-3">
                           <button
                             onClick={() => handleCancelBooking(booking.bookingId)}

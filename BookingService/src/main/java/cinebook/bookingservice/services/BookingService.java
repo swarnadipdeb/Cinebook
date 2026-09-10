@@ -40,7 +40,7 @@ public class BookingService {
         this.screenLayoutService = screenLayoutService;
     }
 
-    public BookingResponseDTO confirmBooking(BookingRequestDTO dto, String userId) {
+    public BookingResponseDTO  confirmBooking(BookingRequestDTO dto, String userId) {
         Reservation reservation = reservationRepository.findById(dto.getReservationId())
                 .orElseThrow(() -> new ResourceNotFoundException("Reservation not found"));
 
@@ -69,6 +69,7 @@ public class BookingService {
                 .showtimeId(dto.getShowtimeId())
                 .theaterId(dto.getTheaterId())
                 .time(dto.getTime())
+                .date(dto.getDate())
                 .screenId(dto.getScreenId())
                 .seats(dto.getSeats())
                 .totalPrice(dto.getTotalPrice())
@@ -143,6 +144,7 @@ public class BookingService {
                 .movieId(b.getMovieId())
                 .showtimeId(b.getShowtimeId())
                 .theaterId(b.getTheaterId())
+                .date(b.getDate())
                 .time(b.getTime())
                 .screenId(b.getScreenId())
                 .seats(b.getSeats())
