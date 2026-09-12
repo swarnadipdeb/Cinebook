@@ -8,19 +8,19 @@ export default defineConfig({
   server: {
     proxy: {
       '/auth': {
-        target: 'http://192.168.29.53:8000',
+        target: 'http://localhost:8000',
         changeOrigin: true,
       },
       '/user': {
-        target: 'http://192.168.29.53:8000',
+        target: 'http://localhost:8000',
         changeOrigin: true,
       },
       '/catalog': {
-        target: 'http://192.168.29.53:8000',
+        target: 'http://localhost:8000',
         changeOrigin: true,
       },
       '/bookings': {
-        target: 'http://192.168.29.53:8000',
+        target: 'http://localhost:8000',
         changeOrigin: true,
       },
     },
