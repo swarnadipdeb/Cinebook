@@ -42,8 +42,8 @@ flowchart LR
 
 	Auth --> AuthDB[(MySQL Auth Database)]
 	User --> UserDB[(MySQL User Database)]
-	Movie --> Mongo[(MongoDB)]
-	Booking --> Mongo
+	Movie --> MovieMongo[(Movie MongoDB)]
+	Booking --> BookingMongo[(Booking MongoDB)]
 
 	Auth --> Kafka[(Apache Kafka)]
 	Kafka --> User
@@ -67,7 +67,8 @@ The platform is composed of independently deployable services. Docker Compose us
 | `UI` Vite development server | `5173` | `5173` | `http://localhost:5173` | Local frontend development server |
 | Kong proxy | `8000` | `8000` | `http://localhost:8000` | HTTP API gateway used by the frontend |
 | MySQL | `3306` | `3306` | `mysql://localhost:3306` | Authentication and profile data |
-| MongoDB | `27017` | `27017` | `mongodb://localhost:27017` | Catalog and booking data |
+| Movie MongoDB | `27017` | `27017` | `mongodb://localhost:27017/movie` | Movie catalog, theaters, and showtimes |
+| Booking MongoDB | `27017` | `27017` | `mongodb://localhost:27017/booking` | Screen layouts, reservations, and bookings |
 | Kafka broker | `9092` | `9092` | `kafka://localhost:9092` | Inter-service event communication |
 
 ### Port access summary
